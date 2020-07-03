@@ -1,0 +1,16 @@
+{
+  "name": "thejobhunt-api",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "run": "node --experimental-modules index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "firebase": "^7.15.5",
+    "node-fetch": "^2.6.0"
+  }
+}
