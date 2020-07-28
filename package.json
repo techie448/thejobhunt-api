@@ -2,10 +2,9 @@
   "name": "thejobhunt-api",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
-  "main": "index.js",
+  "main": "api/index.js",
   "scripts": {
-    "run": "node --experimental-modules index.js"
+    "run": "node --experimental-modules api/index.js"
   },
   "author": "",
   "license": "ISC",
