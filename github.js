@@ -1,9 +1,10 @@
-export default async (start) => {
+export default async (test, query) => {
+    const search = query.split(" ").join("+");
 
-    const req_url = "https://jobs.github.com/positions.json?page=";
+    const req_url = `https://jobs.github.com/positions.json?description=${search}&location=canada&page=`;
 
-    let resultSet = [], count = start, result = [1];
-
+    let resultSet = [], count = 0, result = [1];
+if(test) count = 1;
     while(result.length>0){
         try {
             const res = await fetch(`${req_url}${count}`);
@@ -11,13 +12,11 @@ export default async (start) => {
             result = result.map(job => ({
                 id: job.id || '',
                 company: job.company || '',
-                companyURL: job.company_url || '',
-                created: job.created_at || '',
-                description: job.description || '',
+                created: new Date(job.created_at) || '',
                 apply: job.url || '',
-                location: [job.location] || '',
+                source: 'Github',
+                location: job.location || '',
                 title: job.title || '',
-                type: job.type || '',
             }))
         } catch(err) {
             console.log(err);
@@ -25,9 +24,15 @@ export default async (start) => {
         }
         resultSet.push(...result);
 
-        console.log(`count: ${count} added: ${result.length} resultSet: ${resultSet.length}`);
 
         if(result.length>0) count++;
     }
+
+    console.log({
+        query,
+        source: 'Github',
+        results: resultSet.length
+    });
+
     return resultSet;
 };

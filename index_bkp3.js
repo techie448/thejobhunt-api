@@ -5,49 +5,18 @@ import glassdoor from "./glassdoor.js";
 import indeed from "./indeed.js";
 import linkedin from "./linkedin.js";
 import algolia from "./algolia.js";
-import {getDate} from "./utilities.js";
+import workintech from "./workintech.js";
+import {getDate, permute} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
 import puppeteer from "puppeteer";
-import algoliasearch from "algoliasearch";
 
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
-
-const getResultsParallel = async ({results, testing, queries}) => {
-    const browser = await puppeteer.launch();
-    await Promise.all(queries.map(async query => {
-        const promises = await Promise.all([github(testing, query),
-        adzuna(testing, query),
-        glassdoor(testing, query, browser),
-        indeed(testing, query, browser),
-        linkedin(testing, query, browser),
-        workintech_api(testing, query),
-            ]);
-        const initial = Object.keys(results).length;
-        let total = 0;
-        promises.forEach(promise => {
-            promise.forEach(el=>el.query = query)
-            pushArrayToObject(promise, results)
-            total+=promise.length;
-        });
-        const final = Object.keys(results).length;
-        console.log({
-            total,
-            new : final - initial,
-            duplicates : total - (final - initial),
-            final
-        });
-        return promises;
-    }))
-
-
-    await browser.close();
-}
 
 const getResults = async ({results, testing, queries}) => {
     const browser = await puppeteer.launch();
     for (const query of queries) {
 
-        // console.log(query);
+        console.log(query);
 
         const promises = await Promise.all([
             github(testing, query),
@@ -81,12 +50,12 @@ const getResults = async ({results, testing, queries}) => {
 
         })
         const final = Object.keys(results).length;
-        // console.log({
-        //     total,
-        //     new : final - initial,
-        //     duplicates : total - (final - initial),
-        //     final
-        // });
+        console.log({
+            total,
+            new : final - initial,
+            duplicates : total - (final - initial),
+            final
+        });
 
 
     }
@@ -100,47 +69,27 @@ const deleteOldJobs = async (jobsCollectionRef, results) => {
 
     console.log(`deleting old jobs`)
 
-    let batch = firebaseDB.batch()
-let count = 0;
     for (const job of snapshotData) {
-        if (!results.some(j => j.id === job.id)) {
-            batch.delete(jobsCollectionRef.doc(job.id));
-            count++;
-            if(count===499 || job === snapshotData[snapshotData.length - 1]){
-                count = 0;
-                const committed = await batch.commit();
-                console.log(committed)
-                batch = firebaseDB.batch()
-
-            }
-        }
+        if (!results.some(j => j.id === job.id)) await jobsCollectionRef.doc(job.id).delete();
     }
+
 }
 
 const updateNewJobs = async (jobsCollectionRef, results) => {
-console.log('starting batch')
-    let batch = firebaseDB.batch()
-    let count = 0;
+
     for (const result of results) {
         if(!result.id) result.id = jobsCollectionRef.doc().id;
-        const docRef = jobsCollectionRef.doc(result.id);
-        console.log(results.indexOf(result))
-        batch.set(docRef, result);
-        count++;
-        if(count===499 || result === results[results.length - 1]){
-            count = 0;
-            const committed = await batch.commit();
-            console.log(committed)
-            batch = firebaseDB.batch()
-        }
+        await jobsCollectionRef.doc(result.id).set(result)
     }
 }
 
 const commitJobs = async () => {
+    console.log(new Date())
 
     const jobsCollectionRef = firebaseDB.collection("jobs");
-let results = {};
-    const args = {
+    const results = {};
+//todo: sort based on results and remove lower results, run once again after sort and remove.
+    await getResults({
         results: results,
         testing: false,
         queries: [
@@ -171,46 +120,21 @@ let results = {};
             'Junior Software Engineer',
             'Junior Developer',
         ]
-    };
-    console.time()
-    await getResultsParallel(args)
-    console.timeEnd()
-    const uniqueJobs = Object.values(results);
+    })
 
     console.log(`add datetimestamps`)
 
+    const uniqueJobs = Object.values(results);
+
     uniqueJobs.forEach(job=>job.created = getDate(job.created))
+    console.log(new Date())
 
     console.log(uniqueJobs.length)
-    await deleteOldJobs(jobsCollectionRef, uniqueJobs)
-    await updateNewJobs(jobsCollectionRef, uniqueJobs)
+    // await deleteOldJobs(jobsCollectionRef, uniqueJobs)
+    // await updateNewJobs(jobsCollectionRef, uniqueJobs)
     await algolia(uniqueJobs)
 
 
 }
 
-const transfer_from_algolia_to_firestore = async () => {
-    let hits = [];
-
-    const client = algoliasearch('KCCE701SC2', '719a29d1dfb3929dd72afd2b3c35c3ab');
-    const index = client.initIndex('thejobhunt');
-    await index.browseObjects({
-        query: '', // Empty query will match all records
-        batch: batch => {
-            hits = hits.concat(batch);
-        }
-    }).then(() => {
-        hits.forEach(hit=> delete hit.objectID)
-        const jobsCollectionRef = firebaseDB.collection("jobs");
-        deleteOldJobs(jobsCollectionRef, hits)
-            .then(()=>
-                updateNewJobs(jobsCollectionRef, hits)
-                    .then(()=>
-                        console.log('stored'))
-    )
-    });
-
-}
-
 commitJobs().then( res => console.log(res)).catch(err => console.log(err))
-// transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))

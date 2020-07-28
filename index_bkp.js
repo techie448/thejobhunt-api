@@ -26,15 +26,11 @@ const githubAPI = async () => {
 
             const res = await fetch(`${req_url}${count}`);
             result = await res.json();
-            console.log(`fetched: ${result.length}`);
         } catch(err) {
             console.log(err);
             result = [];
         }
         resultSet.push(...result);
-        console.log(`added: ${result.length}`);
-        console.log(`resultSet: ${resultSet.length}`);
-        console.log(`count: ${count}`);
         count++;
     }
     return resultSet;
