@@ -212,5 +212,7 @@ const transfer_from_algolia_to_firestore = async () => {
 
 }
 
-commitJobs().then( res => console.log(res)).catch(err => console.log(err))
+// commitJobs().then( res => console.log(res)).catch(err => console.log(err))
 // transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
+
+export default commitJobs;
