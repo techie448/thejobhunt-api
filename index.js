@@ -56,8 +56,7 @@ const getResults = async ({results, testing, queries}) => {
             indeed(testing, query, browser),
             linkedin(testing, query, browser),
             workintech_api(testing, query),
-        ]);
-
+]);
 
         promises.forEach(pr=>pr.forEach(el=>el.query = query));
         let streak = 0;
@@ -142,38 +141,38 @@ const commitJobs = async () => {
 let results = {};
     const args = {
         results: results,
-        testing: false,
+        testing: true,
         queries: [
             'Software Engineer',
             'Software Developer',
             'Web Developer',
-            'Web Software Developer',
-            'Web Software engineer',
-            'fullstack Developer',
-            'javascript Developer',
-            'Full stack Developer',
-            'Front end Developer',
-            'Back end Developer',
-            'react developer',
-            'react software developer',
-            'react engineer',
-            'react software engineer',
-            'vue developer',
-            'angular developer',
-            'php developer',
-            'wordpress developer',
-            'java developer',
-            'java software developer',
-            'python developer',
-            'django developer',
-            'Junior Software Developer',
-            'Junior fullstack Developer',
-            'Junior Software Engineer',
-            'Junior Developer',
+            // 'Web Software Developer',
+            // 'Web Software engineer',
+            // 'fullstack Developer',
+            // 'javascript Developer',
+            // 'Full stack Developer',
+            // 'Front end Developer',
+            // 'Back end Developer',
+            // 'react developer',
+            // 'react software developer',
+            // 'react engineer',
+            // 'react software engineer',
+            // 'vue developer',
+            // 'angular developer',
+            // 'php developer',
+            // 'wordpress developer',
+            // 'java developer',
+            // 'java software developer',
+            // 'python developer',
+            // 'django developer',
+            // 'Junior Software Developer',
+            // 'Junior fullstack Developer',
+            // 'Junior Software Engineer',
+            // 'Junior Developer',
         ]
     };
     console.time()
-    await getResultsParallel(args)
+    await getResults(args)
     console.timeEnd()
     const uniqueJobs = Object.values(results);
 

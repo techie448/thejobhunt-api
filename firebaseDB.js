@@ -33,8 +33,8 @@ let firebaseConfig3 = {
     measurementId: "G-6ZH57RS9YD"
 };
 
-firebaseConfig = firebaseConfigTesting;
-// firebaseConfig = firebaseConfig3;
+// firebaseConfig = firebaseConfigTesting;
+firebaseConfig = firebaseConfig3;
 
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
