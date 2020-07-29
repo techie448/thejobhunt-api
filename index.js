@@ -44,7 +44,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
 }
 
 const getResults = async ({results, testing, queries}) => {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox']});
     for (const query of queries) {
 
         // console.log(query);
