@@ -13,7 +13,7 @@ import express from 'express';
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
 
 const getResultsParallel = async ({results, testing, queries}) => {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox']});
     await Promise.all(queries.map(async query => {
         const promises = await Promise.all([github(testing, query),
         adzuna(testing, query),
