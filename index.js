@@ -9,7 +9,7 @@ import {getDate} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
 import puppeteer from "puppeteer";
 import algoliasearch from "algoliasearch";
-
+import express from 'express';
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
 
 const getResultsParallel = async ({results, testing, queries}) => {
@@ -185,6 +185,7 @@ let results = {};
     await deleteOldJobs(jobsCollectionRef, uniqueJobs)
     await updateNewJobs(jobsCollectionRef, uniqueJobs)
     await algolia(uniqueJobs)
+    return uniqueJobs.length;
 
 
 }
@@ -212,5 +213,19 @@ const transfer_from_algolia_to_firestore = async () => {
 
 }
 
-commitJobs().then( res => console.log(res)).catch(err => console.log(err))
 // transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
+
+const app = express();
+const ip = process.env.IP || '0.0.0.0';
+const port = process.env.PORT || 8080;
+
+app.get('/fetch', async (request, res) => {
+
+    commitJobs().then( res => console.log(res)).catch(err => console.log(err))
+
+
+});
+
+app.get('/', (req, res) => res.send('Hello World!'));
+
+app.listen(port, ip);
