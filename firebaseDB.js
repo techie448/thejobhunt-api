@@ -34,7 +34,7 @@ let firebaseConfig3 = {
 };
 
 // firebaseConfig = firebaseConfigTesting;
-firebaseConfig = firebaseConfig3;
+// firebaseConfig = firebaseConfig3;
 
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
