@@ -226,6 +226,9 @@ app.get('/fetch', async (request, res) => {
 
 });
 
-app.get('/', (req, res) => res.send('Hello World!'));
+app.get('/', (req, res) => {
+    res.send('Hello World!')
+    console.log('hello!')
+});
 
 app.listen(port, ip);
