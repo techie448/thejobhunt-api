@@ -14,12 +14,13 @@ const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
 const getResultsParallel = async ({results, testing, queries}) => {
     const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox']});
     await Promise.all(queries.map(async query => {
-        const promises = await Promise.all([github(testing, query),
-        adzuna(testing, query),
+        const promises = await Promise.all([
+            // github(testing, query),
+        // adzuna(testing, query),
         glassdoor(testing, query, browser),
-        indeed(testing, query, browser),
-        linkedin(testing, query, browser),
-        workintech_api(testing, query),
+        // indeed(testing, query, browser),
+        // linkedin(testing, query, browser),
+        // workintech_api(testing, query),
             ]);
         const initial = Object.keys(results).length;
         let total = 0;
@@ -49,12 +50,12 @@ const getResults = async ({results, testing, queries}) => {
         // console.log(query);
 
         const promises = await Promise.all([
-            github(testing, query),
-            adzuna(testing, query),
+            // github(testing, query),
+            // adzuna(testing, query),
             glassdoor(testing, query, browser),
-            indeed(testing, query, browser),
-            linkedin(testing, query, browser),
-            workintech_api(testing, query),
+            // indeed(testing, query, browser),
+            // linkedin(testing, query, browser),
+            // workintech_api(testing, query),
 ]);
 
         promises.forEach(pr=>pr.forEach(el=>el.query = query));

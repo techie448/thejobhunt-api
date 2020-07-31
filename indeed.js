@@ -28,7 +28,6 @@ export default async (test, query, browser) => {
 
         let pagination = 10;
         let recent = true;
-        if(test) pagination = 680
 
         while(recent){
             jobs.push(...await scrapeJobs(page, (`${url}&start=${pagination}`)))
@@ -42,5 +41,7 @@ export default async (test, query, browser) => {
         source: 'indeed',
         results: jobs.length
     });
-        return jobs;
+    await page.close();
+
+    return jobs;
 };

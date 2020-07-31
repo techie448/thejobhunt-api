@@ -4,7 +4,6 @@ export default async (test, query) => {
     const req_url = `https://jobs.github.com/positions.json?description=${search}&location=canada&page=`;
 
     let resultSet = [], count = 0, result = [1];
-if(test) count = 1;
     while(result.length>0){
         try {
             const res = await fetch(`${req_url}${count}`);

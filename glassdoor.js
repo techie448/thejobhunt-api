@@ -24,12 +24,10 @@ export default async (test, query, browser) => {
         const page = await browser.newPage();
         await page.setDefaultNavigationTimeout(0);
         let end = 30;
-        if(test) end = 2;
+        if(test) end = 1;
 
         jobs.push(...await scrapeJobsGD(page, `https://www.glassdoor.ca/Job/canada-${search}-jobs-SRCH_IL.0,6_IN3_KO7,${searchLen}.htm?fromAge=30`));
-
         let pagination = 2;
-        let recent = true;
 
         while(pagination<end){
             jobs.push(...await scrapeJobsGD(page, (`https://www.glassdoor.ca/Job/canada-${search}-jobs-SRCH_IL.0,6_IN3_KO7,${searchLen}_IP${pagination}.htm?fromAge=30`)))
@@ -40,6 +38,7 @@ export default async (test, query, browser) => {
         source: 'glassdoor',
         results: jobs.length
     });
+        await page.close();
         return jobs;
 
 

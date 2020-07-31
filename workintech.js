@@ -42,6 +42,8 @@ console.log(url)
         source: 'workintech',
         results: jobs.length
     });
+    await page.close();
+
     return jobs;
 
 };

@@ -20,7 +20,10 @@ export default async (test, query) => {
                 title: job.title || '',
                 source: 'Adzuna',
             }))
-            if(count === 1 && test) count = Math.ceil((resp.count/50));
+            if(count === 1 && test) {
+                resultSet.push(...result);
+                result = [];
+            }
 
 
         } catch(err) {

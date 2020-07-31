@@ -28,7 +28,6 @@ export default async (test, query, browser) => {
 
 
         let pagination = 0;
-        let recent = true;
         let end = 1000;
         if(test) end = 25;
 
@@ -41,6 +40,7 @@ export default async (test, query, browser) => {
         source: 'linkedin',
         results: jobs.length
     });
+        await page.close();
         return jobs;
 
 };
