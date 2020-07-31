@@ -50,12 +50,12 @@ const getResults = async ({results, testing, queries}) => {
         // console.log(query);
 
         const promises = await Promise.all([
-            // github(testing, query),
-            // adzuna(testing, query),
-            glassdoor(testing, query, browser),
+            github(testing, query),
+            adzuna(testing, query),
+            // glassdoor(testing, query, browser),
             // indeed(testing, query, browser),
             // linkedin(testing, query, browser),
-            // workintech_api(testing, query),
+            workintech_api(testing, query),
 ]);
 
         promises.forEach(pr=>pr.forEach(el=>el.query = query));
