@@ -9,17 +9,18 @@ import {getDate} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
 import puppeteer from "puppeteer";
 import algoliasearch from "algoliasearch";
+const chromium = require('chrome-aws-lambda');
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
 
 const getResultsParallel = async ({results, testing, queries}) => {
-    const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox']});
+    const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox'], executablePath: await chromium.executablePath});
     await Promise.all(queries.map(async query => {
         const promises = await Promise.all([
             github(testing, query),
         adzuna(testing, query),
-        // glassdoor(testing, query, browser),
-        // indeed(testing, query, browser),
-        // linkedin(testing, query, browser),
+        glassdoor(testing, query, browser),
+        indeed(testing, query, browser),
+        linkedin(testing, query, browser),
         workintech_api(testing, query),
             ]);
         const initial = Object.keys(results).length;
@@ -44,7 +45,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
 }
 
 const getResults = async ({results, testing, queries}) => {
-    const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox']});
+    const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox'], executablePath: await chromium.executablePath});
     for (const query of queries) {
 
         // console.log(query);
@@ -141,7 +142,7 @@ const commitJobs = async () => {
 let results = {};
     const args = {
         results: results,
-        testing: false,
+        testing: true,
         queries: [
             'Software Engineer',
             'Software Developer',
