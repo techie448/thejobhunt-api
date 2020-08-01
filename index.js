@@ -7,9 +7,9 @@ import linkedin from "./linkedin.js";
 import algolia from "./algolia.js";
 import {getDate} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
 import algoliasearch from "algoliasearch";
-const chromium = require('chrome-aws-lambda');
+import chromium from 'chrome-aws-lambda';
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
 
 const getResultsParallel = async ({results, testing, queries}) => {
