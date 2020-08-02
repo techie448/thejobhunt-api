@@ -45,7 +45,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
 }
 
 const getResults = async ({results, testing, queries}) => {
-    const browser = await puppeeter.launch({headless: true,  args: ['--no-sandbox']})
+    const browser = await puppeeter.launch({headless: false,  args: ['--no-sandbox']})
 
     for (const query of queries) {
 
@@ -218,6 +218,9 @@ const transfer_from_algolia_to_firestore = async () => {
 
 // transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
 const job = new Cron.CronJob('0 0,8,16 * * *', () => commitJobs(), null, true, 'America/Los_Angeles')
+const jobTest = new Cron.CronJob('0 0,8,16 * * *', () => console.log('hello'+ new Date()), null, true, 'America/Los_Angeles')
 // job.start()
 
-commitJobs()
+// commitJobs()
+
+jobTest.start()
