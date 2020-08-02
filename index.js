@@ -50,7 +50,14 @@ const getResults = async ({results, testing, queries}) => {
     //     // args: ['--no-sandbox'],
     //     executablePath: await chromium.executablePath
     // });
-    const browser = await chromium.puppeteer.launch({ /* ... */ });
+    const browser = await chromium.puppeteer.launch({
+        executablePath: await chromium.executablePath,
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        headless: chromium.headless,
+    });
+
+
     for (const query of queries) {
 
         // console.log(query);
