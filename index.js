@@ -9,6 +9,7 @@ import {getDate} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
 import algoliasearch from "algoliasearch";
 import puppeeter from 'puppeteer';
+import Cron from 'cron';
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
 
 const getResultsParallel = async ({results, testing, queries}) => {
@@ -50,14 +51,16 @@ const getResults = async ({results, testing, queries}) => {
 
         // console.log(query);
 
-        const promises = await Promise.all([
-            github(testing, query),
-            adzuna(testing, query),
-            glassdoor(testing, query, browser),
-            indeed(testing, query, browser),
-            linkedin(testing, query, browser),
-            workintech_api(testing, query),
-]);
+        const promises = [
+            await github(testing, query),
+            await adzuna(testing, query),
+            await glassdoor(testing, query, browser),
+            await indeed(testing, query, browser),
+            await linkedin(testing, query, browser),
+            await workintech_api(testing, query),
+];
+
+
 
         promises.forEach(pr=>pr.forEach(el=>el.query = query));
         let streak = 0;
@@ -149,27 +152,27 @@ let results = {};
             'Web Developer',
             'Web Software Developer',
             'Web Software engineer',
-            // 'fullstack Developer',
-            // 'javascript Developer',
-            // 'Full stack Developer',
-            // 'Front end Developer',
-            // 'Back end Developer',
-            // 'react developer',
-            // 'react software developer',
-            // 'react engineer',
-            // 'react software engineer',
-            // 'vue developer',
-            // 'angular developer',
-            // 'php developer',
-            // 'wordpress developer',
-            // 'java developer',
-            // 'java software developer',
-            // 'python developer',
-            // 'django developer',
-            // 'Junior Software Developer',
-            // 'Junior fullstack Developer',
-            // 'Junior Software Engineer',
-            // 'Junior Developer',
+            'fullstack Developer',
+            'javascript Developer',
+            'Full stack Developer',
+            'Front end Developer',
+            'Back end Developer',
+            'react developer',
+            'react software developer',
+            'react engineer',
+            'react software engineer',
+            'vue developer',
+            'angular developer',
+            'php developer',
+            'wordpress developer',
+            'java developer',
+            'java software developer',
+            'python developer',
+            'django developer',
+            'Junior Software Developer',
+            'Junior fullstack Developer',
+            'Junior Software Engineer',
+            'Junior Developer',
         ]
     };
     console.time()
@@ -214,10 +217,7 @@ const transfer_from_algolia_to_firestore = async () => {
 }
 
 // transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
+const job = new Cron.CronJob('0 0,8,16 * * *', () => commitJobs(), null, true, 'America/Los_Angeles')
+// job.start()
 
-
-    commitJobs().then( res => {
-        console.log(res);
-        process.exit(1);
-    }).catch(err => console.log(err))
-
+commitJobs()
