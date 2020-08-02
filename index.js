@@ -7,7 +7,6 @@ import linkedin from "./linkedin.js";
 import algolia from "./algolia.js";
 import {getDate} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
-import puppeteer from "puppeteer-core";
 import algoliasearch from "algoliasearch";
 import chromium from 'chrome-aws-lambda';
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
@@ -45,7 +44,13 @@ const getResultsParallel = async ({results, testing, queries}) => {
 }
 
 const getResults = async ({results, testing, queries}) => {
-    const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox'], executablePath: await chromium.executablePath});
+    console.log(await chromium.executablePath)
+    // const browser = await puppeteer.launch({
+    //     // headless: true,
+    //     // args: ['--no-sandbox'],
+    //     executablePath: await chromium.executablePath
+    // });
+    const browser = await chromium.puppeteer.launch({ /* ... */ });
     for (const query of queries) {
 
         // console.log(query);
