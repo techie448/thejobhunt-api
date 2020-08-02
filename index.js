@@ -53,9 +53,9 @@ const getResults = async ({results, testing, queries}) => {
         const promises = await Promise.all([
             github(testing, query),
             adzuna(testing, query),
-            // glassdoor(testing, query, browser),
-            // indeed(testing, query, browser),
-            // linkedin(testing, query, browser),
+            glassdoor(testing, query, browser),
+            indeed(testing, query, browser),
+            linkedin(testing, query, browser),
             workintech_api(testing, query),
 ]);
 
@@ -216,5 +216,8 @@ const transfer_from_algolia_to_firestore = async () => {
 // transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
 
 
-    commitJobs().then( res => console.log(res)).catch(err => console.log(err))
+    commitJobs().then( res => {
+        console.log(res);
+        process.exit(1);
+    }).catch(err => console.log(err))
 
