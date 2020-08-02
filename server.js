@@ -1,12 +1,12 @@
-import firebaseDB from "../firebaseDB.js";
-import github from "../github.js";
-import adzuna from "../adzuna.js";
-import glassdoor from "../glassdoor.js";
-import indeed from "../indeed.js";
-import linkedin from "../linkedin.js";
-import algolia from "../algolia.js";
-import {getDate} from "../utilities.js";
-import workintech_api from "../workintech-aloglia-api.js"
+import firebaseDB from "./firebaseDB.js";
+import github from "./github.js";
+import adzuna from "./adzuna.js";
+import glassdoor from "./glassdoor.js";
+import indeed from "./indeed.js";
+import linkedin from "./linkedin.js";
+import algolia from "./algolia.js";
+import {getDate} from "./utilities.js";
+import workintech_api from "./workintech-aloglia-api.js"
 import algoliasearch from "algoliasearch";
 import chromium from 'chrome-aws-lambda';
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
@@ -21,12 +21,12 @@ const getResultsParallel = async ({results, testing, queries}) => {
 
     await Promise.all(queries.map(async query => {
         const promises = await Promise.all([github(testing, query),
-        adzuna(testing, query),
-        glassdoor(testing, query, browser),
-        indeed(testing, query, browser),
-        linkedin(testing, query, browser),
-        workintech_api(testing, query),
-            ]);
+            adzuna(testing, query),
+            glassdoor(testing, query, browser),
+            indeed(testing, query, browser),
+            linkedin(testing, query, browser),
+            workintech_api(testing, query),
+        ]);
         const initial = Object.keys(results).length;
         let total = 0;
         promises.forEach(promise => {
@@ -106,7 +106,7 @@ const deleteOldJobs = async (jobsCollectionRef, results) => {
     console.log(`deleting old jobs`)
 
     let batch = firebaseDB.batch()
-let count = 0;
+    let count = 0;
     for (const job of snapshotData) {
         if (!results.some(j => j.id === job.id)) {
             batch.delete(jobsCollectionRef.doc(job.id));
@@ -123,7 +123,7 @@ let count = 0;
 }
 
 const updateNewJobs = async (jobsCollectionRef, results) => {
-console.log('starting batch')
+    console.log('starting batch')
     let batch = firebaseDB.batch()
     let count = 0;
     for (const result of results) {
@@ -144,37 +144,37 @@ console.log('starting batch')
 const commitJobs = async () => {
 
     const jobsCollectionRef = firebaseDB.collection("jobs");
-let results = {};
+    let results = {};
     const args = {
         results: results,
         testing: true,
         queries: [
             'Software Engineer',
             'Software Developer',
-            'Web Developer',
-            'Web Software Developer',
-            'Web Software engineer',
-            'fullstack Developer',
-            'javascript Developer',
-            'Full stack Developer',
-            'Front end Developer',
-            'Back end Developer',
-            'react developer',
-            'react software developer',
-            'react engineer',
-            'react software engineer',
-            'vue developer',
-            'angular developer',
-            'php developer',
-            'wordpress developer',
-            'java developer',
-            'java software developer',
-            'python developer',
-            'django developer',
-            'Junior Software Developer',
-            'Junior fullstack Developer',
-            'Junior Software Engineer',
-            'Junior Developer',
+            // 'Web Developer',
+            // 'Web Software Developer',
+            // 'Web Software engineer',
+            // 'fullstack Developer',
+            // 'javascript Developer',
+            // 'Full stack Developer',
+            // 'Front end Developer',
+            // 'Back end Developer',
+            // 'react developer',
+            // 'react software developer',
+            // 'react engineer',
+            // 'react software engineer',
+            // 'vue developer',
+            // 'angular developer',
+            // 'php developer',
+            // 'wordpress developer',
+            // 'java developer',
+            // 'java software developer',
+            // 'python developer',
+            // 'django developer',
+            // 'Junior Software Developer',
+            // 'Junior fullstack Developer',
+            // 'Junior Software Engineer',
+            // 'Junior Developer',
         ]
     };
     console.time()
@@ -212,7 +212,7 @@ const transfer_from_algolia_to_firestore = async () => {
                 updateNewJobs(jobsCollectionRef, hits)
                     .then(()=>
                         console.log('stored'))
-    )
+            )
     });
 
 }
@@ -220,4 +220,4 @@ const transfer_from_algolia_to_firestore = async () => {
 // commitJobs().then( res => console.log(res)).catch(err => console.log(err))
 // transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
 
-export default commitJobs;
+commitJobs();
