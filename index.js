@@ -44,12 +44,6 @@ const getResultsParallel = async ({results, testing, queries}) => {
 }
 
 const getResults = async ({results, testing, queries}) => {
-    console.log(await chromium.executablePath)
-    // const browser = await puppeteer.launch({
-    //     // headless: true,
-    //     // args: ['--no-sandbox'],
-    //     executablePath: await chromium.executablePath
-    // });
     const browser = await chromium.puppeteer.launch({
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
