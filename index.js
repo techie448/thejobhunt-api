@@ -51,9 +51,9 @@ const getResults = async ({results, testing, queries}) => {
     //     executablePath: await chromium.executablePath
     // });
     const browser = await chromium.puppeteer.launch({
-        executablePath: await chromium.executablePath,
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath,
         headless: chromium.headless,
     });
 
