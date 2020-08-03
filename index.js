@@ -45,7 +45,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
 }
 
 const getResults = async ({results, testing, queries}) => {
-    const browser = await puppeeter.launch({headless: false,  args: ['--no-sandbox']})
+    const browser = await puppeeter.launch({headless: true,  args: ['--no-sandbox']})
 
     for (const query of queries) {
 
@@ -225,5 +225,5 @@ const job = new Cron.CronJob('59 23 * * *', async () => {
         }
     }, null, true, 'America/New_York');
 
-// job.start()
-commitJobs(false)
+job.start()
+// commitJobs(false)
