@@ -217,7 +217,7 @@ const transfer_from_algolia_to_firestore = async () => {
 // transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
 }
 
-const job = new Cron.CronJob('59 23 * * *', async () => {
+const job = new Cron.CronJob('5 0 * * *', async () => {
         try{
             await commitJobs(false)
         }catch(err){
