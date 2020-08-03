@@ -5,7 +5,7 @@ export default async (test, query, browser) => {
 
         return await page.evaluate(()=>
             Array.from(document.querySelectorAll('.clickcard')).map(r=>({
-                    title: r.querySelector('.title') && r.querySelector('.title').innerText.trim(),
+                    title: r.querySelector('.jobtitle') && r.querySelector('.jobtitle').innerText.trim(),
                     company : r.querySelector('.company') && r.querySelector('.company').innerText.trim(),
                     location : r.querySelector('.location') && r.querySelector('.location').innerText.trim(),
                     created : r.querySelector('.date') && r.querySelector('.date').innerText.trim(),

@@ -139,13 +139,13 @@ console.log('starting batch')
     }
 }
 
-const commitJobs = async () => {
+const commitJobs = async (testing) => {
 
     const jobsCollectionRef = firebaseDB.collection("jobs");
 let results = {};
     const args = {
         results: results,
-        testing: false,
+        testing: testing,
         queries: [
             'Software Engineer',
             'Software Developer',
@@ -217,12 +217,14 @@ const transfer_from_algolia_to_firestore = async () => {
 // transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
 }
 
-const job = new Cron.CronJob('0 23 * * *', async () => {
+const job = new Cron.CronJob('30 23 * * *', async () => {
         try{
-            await commitJobs()
+            await commitJobs(false)
         }catch(err){
             console.log(err);
         }
     }, null, true, 'America/New_York');
 
-    job.start()
+job.start()
+
+// commitJobs(true)
