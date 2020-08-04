@@ -48,7 +48,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
 }
 
 const getResults = async ({results, testing, queries}) => {
-    const browser = await puppeeter.launch({headless: true,  args: ['--no-sandbox']})
+    const browser = await puppeeter.launch({headless: !testing,  args: ['--no-sandbox']})
 
     for (const query of queries) {
 

@@ -1,7 +1,5 @@
 export default async (test, query, browser) => {
     const search = query.split(" ").join("-");
-    const searchLen = search.length + 7;
-
 
     const scrapeJobsGD = async (page, url) => {
         await page.goto(url, {waitUntil: 'networkidle2'});
@@ -26,11 +24,11 @@ export default async (test, query, browser) => {
         let end = 30;
         if(test) end = 1;
 
-        jobs.push(...await scrapeJobsGD(page, `https://www.glassdoor.ca/Job/canada-${search}-jobs-SRCH_IL.0,6_IN3_KO7,${searchLen}.htm?fromAge=30`));
+        jobs.push(...await scrapeJobsGD(page, `https://www.glassdoor.ca/Job/${search}-jobs-SRCH_KO0,17.htm?fromAge=30`));
         let pagination = 2;
 
         while(pagination<end){
-            jobs.push(...await scrapeJobsGD(page, (`https://www.glassdoor.ca/Job/canada-${search}-jobs-SRCH_IL.0,6_IN3_KO7,${searchLen}_IP${pagination}.htm?fromAge=30`)))
+            jobs.push(...await scrapeJobsGD(page, (`https://www.glassdoor.ca/Job/${search}-jobs-SRCH_KO0,17_IP${pagination}.htm?fromAge=30`)))
             pagination++;
         }
     console.log({
