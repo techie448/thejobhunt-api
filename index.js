@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import firebaseDB from "./firebaseDB.js";
 import github from "./github.js";
 import adzuna from "./adzuna.js";
@@ -10,6 +11,8 @@ import workintech_api from "./workintech-aloglia-api.js"
 import algoliasearch from "algoliasearch";
 import puppeeter from 'puppeteer';
 import Cron from 'cron';
+dotenv.config()
+
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
 
 const getResultsParallel = async ({results, testing, queries}) => {
@@ -217,7 +220,7 @@ const transfer_from_algolia_to_firestore = async () => {
 // transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
 }
 
-const job = new Cron.CronJob('5 0 * * *', async () => {
+const job = new Cron.CronJob(process.env.CRON, async () => {
         try{
             await commitJobs(false)
         }catch(err){
@@ -225,5 +228,5 @@ const job = new Cron.CronJob('5 0 * * *', async () => {
         }
     }, null, true, 'America/New_York');
 
-// job.start()
-commitJobs(true)
+job.start()
+// commitJobs(true)
