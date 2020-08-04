@@ -225,5 +225,5 @@ const job = new Cron.CronJob('5 0 * * *', async () => {
         }
     }, null, true, 'America/New_York');
 
-job.start()
-// commitJobs(false)
+// job.start()
+commitJobs(true)
