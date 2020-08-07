@@ -11,10 +11,12 @@
   "license": "ISC",
   "dependencies": {
     "algoliasearch": "^4.3.0",
+    "axios": "^0.19.2",
+    "cheerio": "^1.0.0-rc.3",
     "cron": "^1.8.2",
+    "dotenv": "^8.2.0",
     "firebase": "^7.15.5",
     "node-fetch": "^2.6.0",
-    "puppeteer": "^3.0.1",
-    "dotenv": "^8.2.0"
+    "puppeteer": "^3.0.1"
   }
 }

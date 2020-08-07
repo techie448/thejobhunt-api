@@ -11,6 +11,7 @@ import workintech_api from "./workintech-aloglia-api.js"
 import algoliasearch from "algoliasearch";
 import puppeeter from 'puppeteer';
 import Cron from 'cron';
+import neuvoo from "./neuvoo.js";
 dotenv.config()
 
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
@@ -61,6 +62,7 @@ const getResults = async ({results, testing, queries}) => {
             await indeed(testing, query, browser),
             await linkedin(testing, query, browser),
             await workintech_api(testing, query),
+            await neuvoo(testing, query),
 ];
 
 
@@ -186,12 +188,16 @@ let results = {};
     console.log(`add datetimestamps`)
 
     uniqueJobs.forEach(job=>job.created = getDate(job.created))
-
     console.log(uniqueJobs.length)
-    await deleteOldJobs(jobsCollectionRef, uniqueJobs)
-    await updateNewJobs(jobsCollectionRef, uniqueJobs)
-    await algolia(uniqueJobs)
-    return uniqueJobs.length;
+
+    const finalJobs = uniqueJobs.sort((b,a) => a.created - b.created).slice(0,9999);
+    console.log(finalJobs.length)
+
+    await deleteOldJobs(jobsCollectionRef, finalJobs)
+    await updateNewJobs(jobsCollectionRef, finalJobs)
+    await algolia(finalJobs)
+
+    return finalJobs.length;
 
 
 }
