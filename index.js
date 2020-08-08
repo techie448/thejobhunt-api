@@ -213,4 +213,4 @@ const removeEmptyFields = async (input) => {
     })
 }
 
-commitJobs(true).then(res=>console.log(res.length))
+commitJobs(false).then(res=>console.log(res))
