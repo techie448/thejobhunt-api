@@ -1,12 +1,12 @@
 export default async (test, query) => {
     const search = query.split(" ").join("+");
 
-    const req_url = `https://jobs.github.com/positions.json?description=${search}&location=canada&page=`;
+    const url = `https://jobs.github.com/positions.json?description=${search}&location=canada&page=`;
 
     let resultSet = [], count = 0, result = [1];
     while(result.length>0){
         try {
-            const res = await fetch(`${req_url}${count}`);
+            const res = await fetch(`${url}${count}`);
             result = await res.json();
             result = result.map(job => ({
                 id: job.id || '',
@@ -18,7 +18,7 @@ export default async (test, query) => {
                 title: job.title || '',
             }))
         } catch(err) {
-            console.log(err);
+            console.log(`ERROR : ${url}${count}`)
             result = [];
         }
         resultSet.push(...result);

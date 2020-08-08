@@ -1,43 +1,49 @@
-export default async (test, query, browser) => {
+import axios from 'axios';
+import cheerio from 'cheerio';
+export default async (test, query) => {
     const search = query.split(" ").join("-");
 
-    const scrapeJobsGD = async (page, url) => {
-        await page.goto(url, {waitUntil: 'networkidle2'});
-        return await page.evaluate(()=>
-            Array.from(document.querySelectorAll('.jl')).map(r=>({
-                    title: r.querySelector('div.jobContainer > a') && r.querySelector('div.jobContainer > a').innerText.trim(),
-                    company : r.querySelector('.jobEmpolyerName') && r.querySelector('.jobEmpolyerName').innerText.trim(),
-                    location : r.querySelector('.loc') && r.querySelector('.loc').innerText.trim(),
-                    created : r.querySelector('.pl-std') && r.querySelector('.pl-std').innerText.trim(),
-                    apply : r.querySelector('.jobTitle') && r.querySelector('.jobTitle').href,
-                    id : r.getAttribute('data-id'),
-                    source : 'Glassdoor',
-                })
-            )
-        );
-
-
-    }
-        const jobs = [];
-        const page = await browser.newPage();
-        await page.setDefaultNavigationTimeout(0);
-        let end = 30;
-        if(test) end = 1;
-
-        jobs.push(...await scrapeJobsGD(page, `https://www.glassdoor.ca/Job/${search}-jobs-SRCH_KO0,17.htm?fromAge=30`));
-        let pagination = 2;
-
-        while(pagination<end){
-            jobs.push(...await scrapeJobsGD(page, (`https://www.glassdoor.ca/Job/${search}-jobs-SRCH_KO0,17_IP${pagination}.htm?fromAge=30`)))
-            pagination++;
+    const getData = async (url) => {
+        const results = [];
+        try{
+            const response = await axios.get(url);
+            let data;
+            data = response.data;
+            const $ = cheerio.load(data);
+            const cards = $('.jl');
+            cards.each((_,card)=>{
+                const $card = $(card);
+                const id = $card.attr('data-id');
+                const title = $card.find('div.jobContainer > a').text();
+                const apply = `https://www.glassdoor.ca/$card.find('.jobTitle').attr('href')`;
+                const location = $card.find('.loc').text();
+                const company = $card.find('.jobEmpolyerName').text();
+                const created = $card.find('.pl-std').text();
+                const source = "Glassdoor";
+                results.push( { id, title, apply, location , company , created, source } );
+            })
+        }catch(err){
+            console.log(`ERROR : ${err.config.url}`)
         }
+        return results;
+    }
+    let page = 2;
+    let run = true;
+    const results = [];
+    while(run && page<=30){
+        const url = `https://www.glassdoor.ca/Job/${search}-jobs-SRCH_KO0,${search.length}_IP${page}.htm?fromAge=14`;
+        const result = await getData(url);
+        if(result.length>0) results.push(...result)
+        else run = false;
+        if(test) run=false;
+        page++;
+    }
     console.log({
         query,
         source: 'glassdoor',
-        results: jobs.length
+        results: results.length
     });
-        await page.close();
-        return jobs;
+    return results;
 
 
 

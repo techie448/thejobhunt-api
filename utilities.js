@@ -11,12 +11,13 @@ export const getDate = (dateString) => {
     }else if(dateString.match(/[0-9]+[ ]?[m]/g) || dateString ==='30+ days ago'){
         date.setDate(date.getDate() - 31)
     }
-    else if (dateString.match(/[0-9]+[ ]?[h]/g) || dateString === 'Just posted' || dateString === 'Today'){
+    else if (dateString.match(/[0-9]+[ ]?[h]/g) || dateString === 'Just posted' || dateString === 'Today' || dateString === 'Just now'){
     }
     else if (dateString === 'Yesterday') {
         date.setDate(date.getDate() - 1)
     }
     else {
+        date.setDate(date.getDate() - 300)
         console.log(dateString)
     }
     return date;

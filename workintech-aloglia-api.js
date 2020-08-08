@@ -13,23 +13,28 @@ export default async (test, query) => {
         "query": query,
         "hitsPerPage":hits,
         "attributesToRetrieve":["created_at","title","organization.name","locations","url"],
+    };
+    try {
+
+        const res = await fetch(url, {method: 'POST', headers: headers, body: JSON.stringify(data)})
+        const json = await res.json();
+        jobs.push(...json.hits.map(r => ({
+            title: r.title,
+            company: r.organization.name,
+            location: r.locations.join(" "),
+            created: new Date(r.created_at * 1000),
+            apply: r.url,
+            id: r.objectID,
+            source: 'Workintech',
+        })));
+        console.log({
+            query,
+            source: 'workintech',
+            results: jobs.length
+        });
+    }catch(err){
+        console.log(`ERROR: ALGOLIA ${err}`)
     }
-    const res = await fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(data)})
-    const json = await res.json();
-    jobs.push(...json.hits.map(r=>({
-        title: r.title,
-        company : r.organization.name,
-        location : r.locations.join(" "),
-        created : new Date(r.created_at * 1000),
-        apply : r.url,
-        id : r.objectID,
-        source : 'Workintech',
-    })));
-    console.log({
-        query,
-        source: 'workintech',
-        results: jobs.length
-    });
     return jobs;
 
 };

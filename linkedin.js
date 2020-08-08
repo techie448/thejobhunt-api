@@ -1,46 +1,50 @@
-export default async (test, query, browser) => {
-    const search = query.split(" ").join("+");
+import axios from 'axios';
+import cheerio from 'cheerio';
 
-    const url =
-        `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=${search}&location=Canada&sortBy=DD`
+export default async (test, query) => {
+    const getData = async (url) => {
+        const results = [];
+        try{
+            let data;
+            const response = await axios.get(url);
+            data = response.data;
+            const $ = cheerio.load(data);
+            const cards = $('.result-card');
+            cards.each((_,card)=>{
+                const $card = $(card);
+                const title = $card.find('h3').text().trim();
+                const company = $card.find('h4').text().trim();
+                const location = $card.find('.job-result-card__location').text();
+                const created = $card.find('time').text();
+                const apply = `${$card.find('a').attr('href')}`;
+                const id = $card.attr('data-id');
+                const source = "LinkedIn";
+                const data = {id, title, apply, location, company, created, source};
+                results.push( data );
+            })
 
-    const scrapeJobsLinkedin = async (page, url) => {
-        await page.goto(url, {waitUntil: 'networkidle2'});
-
-        return await page.evaluate(()=>
-            Array.from(document.querySelectorAll('.result-card')).map(r=>({
-                    title: r.querySelector('h3') && r.querySelector('h3').innerText.trim(),
-                    company : r.querySelector('h4') && r.querySelector('h4').innerText.trim(),
-                    location : r.querySelector('.job-result-card__location') && r.querySelector('.job-result-card__location').innerText.trim(),
-                    created : r.querySelector('time') && r.querySelector('time').innerText.trim(),
-                    apply : r.querySelector('a') && r.querySelector('a').href.trim(),
-                    id : r.getAttribute('data-id'),
-                    source : 'Linkedin'
-                })
-            )
-        );
-
-    }
-        const jobs = [];
-        const page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(0);
-
-
-
-        let pagination = 0;
-        let end = 1000;
-        if(test) end = 25;
-
-        while(pagination<end){
-            jobs.push(...await scrapeJobsLinkedin(page, (`${url}&start=${pagination}`)))
-            pagination+=25;
+        }catch(err){
+            console.log(`ERROR : ${err.config.url}`)
         }
+
+        return results;
+    }
+    const search = query.split(" ").join("+");
+    let page = 0;
+    let run = true;
+    const jobs = [];
+    while(run && page<1000){
+        const url = `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=${search}&location=Canada&sortBy=DD&start=${page}`;
+        const results = await getData(url);
+        if(results.length>0) jobs.push(...results)
+        else run = false;
+        if(test) run=false;
+        page+=25;
+    }
     console.log({
         query,
         source: 'linkedin',
         results: jobs.length
     });
-        await page.close();
-        return jobs;
-
+    return jobs;
 };

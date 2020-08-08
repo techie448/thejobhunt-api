@@ -1,47 +1,54 @@
-export default async (test, query, browser) => {
-    const search = query.split(" ").join("+");
-    const scrapeJobs = async (page, url) => {
-        await page.goto(url, {waitUntil: 'networkidle2'});
+import axios from 'axios';
+import cheerio from 'cheerio';
 
-        return await page.evaluate(()=>
-            Array.from(document.querySelectorAll('.clickcard')).map(r=>({
-                    title: r.querySelector('.jobtitle') && r.querySelector('.jobtitle').innerText.trim(),
-                    company : r.querySelector('.company') && r.querySelector('.company').innerText.trim(),
-                    location : r.querySelector('.location') && r.querySelector('.location').innerText.trim(),
-                    created : r.querySelector('.date') && r.querySelector('.date').innerText.trim(),
-                    apply : r.querySelector('.jobtitle') && r.querySelector('.jobtitle').href.trim(),
-                    id : r.id,
-                    source : 'Indeed',
-                })
-            )
-        );
-
-
-    }
-    const url = `https://ca.indeed.com/jobs?q=${search}&l=Canada&sort=date`
-        const jobs = [];
-
-        const page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(0);
-
-        jobs.push(...await scrapeJobs(page, url));
-
-        let pagination = 10;
-        let recent = true;
-
-        while(recent){
-            jobs.push(...await scrapeJobs(page, (`${url}&start=${pagination}`)))
-            pagination+=10;
-            if(jobs[jobs.length-1].created.includes("30")) recent = false
-            if(test) recent = false
-
+export default async (test, query) => {
+    const getData = async (url) => {
+        const results = [];
+        try{
+            let data;
+            const response = await axios.get(url);
+            data = response.data;
+            const $ = cheerio.load(data);
+            const cards = $('div.row.result');
+            cards.each((_,card)=>{
+                const $card = $(card);
+                const title = $card.find('.jobtitle').text().trim();
+                const company = $card.find('.company').text().trim();
+                const location = $card.find('.location').text();
+                const created = $card.find('.date').text();
+                const apply = `https://ca.indeed.com${$card.find('a.jobtitle').attr('href')}`;
+                const id = $card.attr('id');
+                const source = "Indeed";
+                const data = {id, title, apply, location, company, created, source};
+                results.push( data );
+            })
+        }catch(err){
+            console.log(`ERROR : ${err.config.url}`);
         }
+
+        return results;
+    }
+    const search = query.split(" ").join("+");
+    let page = 0;
+    let run = true;
+    const results = [];
+    while(run){
+        let url;
+        if(page===0) url = `https://ca.indeed.com/jobs?q=${search}&l=Canada&sort=date`;
+        else url = `https://ca.indeed.com/jobs?q=${search}&l=Canada&sort=date&start=${page}`;
+        const result = await getData(url);
+        if(result[result.length-1].created.match(/^(15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)( days ago)$/)) {
+            run = false;
+        }
+        if(result.length>0) results.push(...result)
+        else run = false;
+        if(test) run=false;
+        page+=10;
+    }
     console.log({
         query,
         source: 'indeed',
-        results: jobs.length
+        results: results.length
     });
-    await page.close();
-
-    return jobs;
+    return results;
 };

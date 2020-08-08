@@ -9,24 +9,31 @@ import algolia from "./algolia.js";
 import {getDate} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
 import algoliasearch from "algoliasearch";
-import puppeeter from 'puppeteer';
 import Cron from 'cron';
 import neuvoo from "./neuvoo.js";
+import workpolis from "./workpolis.js";
+import monster from "./monster.js";
+import fs from 'fs';
 dotenv.config()
 
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
 
 const getResultsParallel = async ({results, testing, queries}) => {
-    const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox'], executablePath: await chromium.executablePath});
+    let maxParallel = 0;
     await Promise.all(queries.map(async query => {
-        const promises = await Promise.all([
+        const promisesRun = await Promise.allSettled([
             github(testing, query),
-        adzuna(testing, query),
-        glassdoor(testing, query, browser),
-        indeed(testing, query, browser),
-        linkedin(testing, query, browser),
-        workintech_api(testing, query),
+            adzuna(testing, query),
+            glassdoor(testing, query),
+            indeed(testing, query),
+            linkedin(testing, query),
+            workintech_api(testing, query),
+            neuvoo(testing, query),
+            workpolis(testing, query),
+            monster(testing, query),
             ]);
+        const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
+        const rejected = promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(res.reason.config.url))
         const initial = Object.keys(results).length;
         let total = 0;
         promises.forEach(promise => {
@@ -34,35 +41,35 @@ const getResultsParallel = async ({results, testing, queries}) => {
             pushArrayToObject(promise, results)
             total+=promise.length;
         });
+        maxParallel+=total;
         const final = Object.keys(results).length;
-        console.log({
-            total,
-            new : final - initial,
-            duplicates : total - (final - initial),
-            final
-        });
+        // console.log({
+        //     query,
+        //     total,
+        //     new : final - initial,
+        //     duplicates : total - (final - initial),
+        //     final
+        // });
         return promises;
     }))
+    console.log({maxParallel})
 
 
-    await browser.close();
 }
 
 const getResults = async ({results, testing, queries}) => {
-    const browser = await puppeeter.launch({headless: !testing,  args: ['--no-sandbox']})
-
+    let maxRegular = 0;
     for (const query of queries) {
-
-        // console.log(query);
-
         const promises = [
             await github(testing, query),
             await adzuna(testing, query),
-            await glassdoor(testing, query, browser),
-            await indeed(testing, query, browser),
-            await linkedin(testing, query, browser),
+            await glassdoor(testing, query),
+            await indeed(testing, query),
+            await linkedin(testing, query),
             await workintech_api(testing, query),
             await neuvoo(testing, query),
+            await workpolis(testing, query),
+            await monster(testing, query),
 ];
 
 
@@ -73,6 +80,7 @@ const getResults = async ({results, testing, queries}) => {
         let total = 0;
         promises.forEach(promise => {
             const initial = Object.keys(results).length;
+            maxRegular += promise.length;
             pushArrayToObject(promise, results)
             const afterUpdate = Object.keys(results).length;
             total+=promise.length;
@@ -98,7 +106,7 @@ const getResults = async ({results, testing, queries}) => {
 
 
     }
-    await browser.close();
+    console.log({maxRegular})
 }
 
 const deleteOldJobs = async (jobsCollectionRef, results) => {
@@ -148,6 +156,9 @@ const commitJobs = async (testing) => {
 
     const jobsCollectionRef = firebaseDB.collection("jobs");
 let results = {};
+let resultsParallel = {};
+
+
     const args = {
         results: results,
         testing: testing,
@@ -159,7 +170,7 @@ let results = {};
             // 'Web Software engineer',
             'fullstack Developer',
             'javascript Developer',
-            // 'Full stack Developer',
+            'Full stack Developer',
             'Front end Developer',
             'Back end Developer',
             // 'react developer',
@@ -180,22 +191,56 @@ let results = {};
             // 'Junior Developer',
         ]
     };
-    console.time()
-    await getResults(args)
-    console.timeEnd()
+    // console.time('regular')
+    // await getResults(args)
+    // console.timeEnd('regular')
+    console.time('parallel')
+    await getResultsParallel({...args,
+        // results: resultsParallel
+    })
+    console.timeEnd('parallel')
+    console.log({
+        regular : Object.keys(results).length,
+        parallel : Object.keys(resultsParallel).length
+    })
+
     const uniqueJobs = Object.values(results);
 
-    console.log(`add datetimestamps`)
-
     uniqueJobs.forEach(job=>job.created = getDate(job.created))
-    console.log(uniqueJobs.length)
+    console.log({
+        jobs: uniqueJobs.length,
+        start: uniqueJobs[0].created,
+        end: uniqueJobs[uniqueJobs.length-1].created
+    })
 
-    const finalJobs = uniqueJobs.sort((b,a) => a.created - b.created).slice(0,9999);
-    console.log(finalJobs.length)
+    const dateLimitter = new Date();
+    dateLimitter.setDate(dateLimitter.getDate() - 14);
 
-    await deleteOldJobs(jobsCollectionRef, finalJobs)
-    await updateNewJobs(jobsCollectionRef, finalJobs)
-    await algolia(finalJobs)
+    let finalJobs = uniqueJobs
+        .filter(job => job.created >= dateLimitter)
+        .sort((b,a) => a.created - b.created);
+    console.log({
+        jobs: finalJobs.length,
+        start: finalJobs[0].created,
+        end: finalJobs[finalJobs.length-1].created
+    })
+
+    // console.log(await fs.promises.writeFile('index.json',JSON.stringify(finalJobs), 'utf-8'));
+
+     finalJobs = await removeDuplicates(finalJobs);
+
+     finalJobs = await removeEmptyFields(finalJobs);
+
+    const slicedJobs = finalJobs.slice(0,9999);
+    console.log({
+        jobs: slicedJobs.length,
+        start: slicedJobs[0].created,
+        end: slicedJobs[slicedJobs.length-1].created
+    })
+
+    // await deleteOldJobs(jobsCollectionRef, finalJobs)
+    // await updateNewJobs(jobsCollectionRef, finalJobs)
+    // await algolia(finalJobs)
 
     return finalJobs.length;
 
@@ -234,5 +279,55 @@ const job = new Cron.CronJob(process.env.CRON, async () => {
         }
     }, null, true, 'America/New_York');
 
-job.start()
-// commitJobs(true)
+// job.start()
+const removeDuplicates = async (input) => {
+    // input = input.slice(0,1000)
+    console.log(input.length);
+     input = input.reduce((unique, o) => {
+        if(!unique.some(obj => {
+            const tit = obj.title.trim() === o.title.trim()
+            const com = obj.company.trim() === o.company.trim()
+                || obj.company.toLowerCase().trim().includes(o.company.trim().toLowerCase())
+                || o.company.toLowerCase().trim().includes(obj.company.trim().toLowerCase());
+            const loc  = (obj.location.trim() === o.location.trim() ||
+                obj.location.toLowerCase().trim().includes(o.location.trim().toLowerCase()) ||
+                o.location.toLowerCase().trim().includes(obj.location.trim().toLowerCase())
+
+            );
+            const cond = tit && com && loc;
+            // if(
+            //    cond
+            // ) console.log({
+            //     id: obj.id,
+            //     title: obj.title,
+            //     company: obj.company,
+            //     location: obj.location,
+            //     apply: obj.apply
+            // },{
+            //     id: o.id,
+            //     title: o.title,
+            //     company: o.company,
+            //     location: o.location,
+            //     apply: o.apply
+            //
+            // })
+
+            return cond
+        })) {
+
+            unique.push(o);
+        }
+        return unique;
+    },[]);
+     return input;
+}
+
+const removeEmptyFields = async (input) => {
+    return input.filter(job => {
+        let res = true;
+        Object.keys(job).forEach(key => {
+            if (job[key].length < 2) res = false;
+        })
+        return res;
+    })
+}

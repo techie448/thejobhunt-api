@@ -1,12 +1,16 @@
+import axios from 'axios'
+
 export default async (test, query) => {
 
     const search = query.split(" ").join("+");
     let resultSet = [], count = 1, result = [1], country = 'ca';
     while(result.length>0){
+        const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${count}?app_id=962980b9&app_key=0a90e95c3f2f318bf11ca7733fbb6dbd&what=${search}&max_days_old=14&sort_by=date&content-type=application/json&results_per_page=50`;
         try {
-            const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${count}?app_id=962980b9&app_key=0a90e95c3f2f318bf11ca7733fbb6dbd&what=${search}&max_days_old=31&sort_by=date&content-type=application/json&results_per_page=50`;
-            const res = await fetch(url);
-            const resp = await res.json();
+            let resp;
+                const response = await axios.get(url);
+                resp = response.data;
+
             const resp_string = JSON.stringify(resp);
             const resp_string_sanitized = resp_string.replace(/__/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             const resp_sanitized = JSON.parse(resp_string_sanitized);
@@ -27,7 +31,7 @@ export default async (test, query) => {
 
 
         } catch(err) {
-            console.log(err);
+            console.log(`ERROR: ${url}`);
             result = [];
         }
         resultSet.push(...result);
