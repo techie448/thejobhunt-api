@@ -19,8 +19,8 @@ export default async (test, query) => {
                 const apply = `https://ca.indeed.com${$card.find('a.jobtitle').attr('href')}`;
                 const id = $card.attr('id');
                 const source = "Indeed";
-                const data = {id, title, apply, location, company, created, source};
-                results.push( data );
+                const data = {id, title, apply, location, company, created, source, query, };
+                results.push(data);
             })
         }catch(err){
             console.log(`ERROR : ${err.config.url}`);

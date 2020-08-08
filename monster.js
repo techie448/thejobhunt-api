@@ -15,6 +15,7 @@ export default async (test, query) => {
                 created: new Date(job.DatePosted),
                 apply: job.TitleLink,
                 source: "Monster",
+                query,
             }));
 
         }catch(err){

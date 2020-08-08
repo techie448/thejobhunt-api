@@ -19,7 +19,7 @@ export default async (test, query) => {
                 const company = $card.find('.card__job-empname-label').text();
                 const created = date;
                 const source = "Neuvoo";
-                results.push( { id, title, apply, location , company , created, source } );
+                results.push( { id, title, apply, location , company , created, source, query, } );
             })
 
         }catch(err){

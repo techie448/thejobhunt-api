@@ -19,7 +19,7 @@ export default async (test, query) => {
                 const apply = `${$card.find('a').attr('href')}`;
                 const id = $card.attr('data-id');
                 const source = "LinkedIn";
-                const data = {id, title, apply, location, company, created, source};
+                const data = {id, title, apply, location, company, created, source, query, };
                 results.push( data );
             })
 

@@ -18,7 +18,7 @@ export default async (test, query) => {
                 const id = $card.attr('data-jobkey');
                 const source = "Workpolis";
 
-                const data = {id, title, apply, location, company, created, source};
+                const data = {id, title, apply, location, company, created, source, query, };
                 results.push(data);
             })
 

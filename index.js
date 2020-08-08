@@ -89,17 +89,8 @@ const commitJobs = async (testing) => {
         queries: [
             'Software Engineer',
             'Software Developer',
-            'Web Developer',
-            'javascript Developer',
             'Full stack Developer',
-            'Front end Developer',
-            'Back end Developer',
             'java developer',
-            'java software developer',
-            'django developer',
-            'Junior Software Developer',
-            'Junior full stack Developer',
-            'Junior Software Engineer',
             'Junior Developer',
         ]
     };

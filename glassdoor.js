@@ -7,20 +7,21 @@ export default async (test, query) => {
         const results = [];
         try{
             const response = await axios.get(url);
-            let data;
-            data = response.data;
+            const data = response.data;
             const $ = cheerio.load(data);
             const cards = $('.jl');
             cards.each((_,card)=>{
                 const $card = $(card);
-                const id = $card.attr('data-id');
-                const title = $card.find('div.jobContainer > a').text();
-                const apply = `https://www.glassdoor.ca/${$card.find('.jobTitle').attr('href')}`;
-                const location = $card.find('.loc').text();
-                const company = $card.find('.jobEmpolyerName').text();
-                const created = $card.find('.pl-std').text();
-                const source = "Glassdoor";
-                results.push( { id, title, apply, location , company , created, source } );
+                results.push({
+                    id: $card.attr('data-id'),
+                    title: $card.find('div.jobContainer > a').text(),
+                    apply: `https://www.glassdoor.ca/${$card.find('.jobTitle').attr('href')}`,
+                    location:$card.find('.loc').text(),
+                    company: $card.find('.jobEmpolyerName').text(),
+                    created: $card.find('.pl-std').text(),
+                    source: "Glassdoor",
+                    query,
+                });
             })
         }catch(err){
             console.log(`ERROR : ${err.config.url}`)
@@ -40,7 +41,7 @@ export default async (test, query) => {
     }
     console.log({
         query,
-        source: 'glassdoor',
+        source: 'Glassdoor',
         results: results.length
     });
     return results;

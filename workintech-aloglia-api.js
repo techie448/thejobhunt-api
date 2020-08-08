@@ -26,6 +26,7 @@ export default async (test, query) => {
             apply: r.url,
             id: r.objectID,
             source: 'Workintech',
+            query,
         })));
         console.log({
             query,

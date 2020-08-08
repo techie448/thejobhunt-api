@@ -16,14 +16,13 @@ export default async (test, query) => {
                 source: 'Github',
                 location: job.location || '',
                 title: job.title || '',
+                query,
             }))
         } catch(err) {
             console.log(`ERROR : ${url}${count}`)
             result = [];
         }
         resultSet.push(...result);
-
-
         if(result.length>0) count++;
     }
 
