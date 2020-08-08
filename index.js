@@ -7,11 +7,11 @@ import indeed from "./indeed.js";
 import linkedin from "./linkedin.js";
 import {getDate} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
-import algoliasearch from "algoliasearch";
 import Cron from 'cron';
 import neuvoo from "./neuvoo.js";
 import workpolis from "./workpolis.js";
 import monster from "./monster.js";
+import algolia  from "./algolia.js";
 
 dotenv.config()
 
@@ -80,89 +80,6 @@ console.log('updating new jobs to firebase')
     }
 }
 
-const commitJobs = async (testing) => {
-    const jobsCollectionRef = firebaseDB.collection("jobs");
-    let results = {};
-    const args = {
-        results: results,
-        testing: testing,
-        queries: [
-            'Software Engineer',
-            'Software Developer',
-            'Full stack Developer',
-            'java developer',
-            'Junior Developer',
-        ]
-    };
-    console.time()
-    await getResultsParallel(args)
-    console.timeEnd()
-
-    const uniqueJobs = Object.values(results);
-    console.log(uniqueJobs.length)
-
-    uniqueJobs.forEach(job=>job.created = getDate(job.created))
-
-    const dateLimitter = new Date();
-    const delimitter = 14;
-    dateLimitter.setDate(dateLimitter.getDate() - delimitter);
-
-    console.log(`removing jobs older than ${delimitter} days...`)
-    let finalJobs = uniqueJobs
-        .filter(job => job.created >= dateLimitter)
-        .sort((b,a) => a.created - b.created);
-    console.log(finalJobs.length)
-    console.log(`removing duplicates`)
-     finalJobs = await removeDuplicates(finalJobs);
-    console.log(finalJobs.length)
-    console.log(`removing empty fields`)
-    finalJobs = await removeEmptyFields(finalJobs);
-    console.log(finalJobs.length)
-    console.log(`slicing jobs if older than 9998`)
-    if(finalJobs.length>9998) finalJobs = finalJobs.slice(0,9998);
-
-    // await deleteOldJobs(jobsCollectionRef, finalJobs)
-    // await updateNewJobs(jobsCollectionRef, finalJobs)
-    // await algolia(finalJobs)
-
-    return finalJobs.length;
-
-
-}
-
-const transfer_from_algolia_to_firestore = async () => {
-    let hits = [];
-
-    const client = algoliasearch('KCCE701SC2', '719a29d1dfb3929dd72afd2b3c35c3ab');
-    const index = client.initIndex('thejobhunt');
-    await index.browseObjects({
-        query: '', // Empty query will match all records
-        batch: batch => {
-            hits = hits.concat(batch);
-        }
-    }).then(() => {
-        hits.forEach(hit=> delete hit.objectID)
-        const jobsCollectionRef = firebaseDB.collection("jobs");
-        deleteOldJobs(jobsCollectionRef, hits)
-            .then(()=>
-                updateNewJobs(jobsCollectionRef, hits)
-                    .then(()=>
-                        console.log('stored'))
-    )
-    });
-
-// transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
-}
-
-const job = new Cron.CronJob(process.env.CRON, async () => {
-        try{
-            await commitJobs(false)
-        }catch(err){
-            console.log(err);
-        }
-    }, null, true, 'America/New_York');
-
-// job.start()
 const removeDuplicates = async (input) => {
     input = input.reduce((unique, o) => {
         if(!unique.some(obj => {
@@ -192,4 +109,62 @@ const removeEmptyFields = async (input) => {
     })
 }
 
-commitJobs(false).then(res=>console.log(res))
+const commitJobs = async (testing) => {
+    const jobsCollectionRef = firebaseDB.collection("jobs");
+    let results = {};
+    const args = {
+        results: results,
+        testing: testing,
+        queries: [
+            'Software Engineer',
+            'Software Developer',
+            'Full stack Developer',
+            'java developer',
+            'Junior Developer',
+        ]
+    };
+    console.time()
+    await getResultsParallel(args)
+    console.timeEnd()
+
+    const uniqueJobs = Object.values(results);
+    console.log(uniqueJobs.length)
+
+    uniqueJobs.forEach(job=>job.created = getDate(job.created))
+
+    const dateLimit = new Date();
+    const limit = 14;
+    dateLimit.setDate(dateLimit.getDate() - limit);
+
+    console.log(`removing jobs older than ${limit} days...`)
+    let finalJobs = uniqueJobs
+        .filter(job => job.created >= dateLimit)
+        .sort((b,a) => a.created - b.created);
+    console.log(finalJobs.length)
+    console.log(`removing duplicates`)
+     finalJobs = await removeDuplicates(finalJobs);
+    console.log(finalJobs.length)
+    console.log(`removing empty fields`)
+    finalJobs = await removeEmptyFields(finalJobs);
+    console.log(finalJobs.length)
+    console.log(`slicing jobs if older than 9998`)
+    if(finalJobs.length>9998) finalJobs = finalJobs.slice(0,9998);
+
+    await deleteOldJobs(jobsCollectionRef, finalJobs)
+    await updateNewJobs(jobsCollectionRef, finalJobs)
+    await algolia(finalJobs)
+
+    return finalJobs.length;
+
+
+}
+
+const job = new Cron.CronJob(process.env.CRON, async () => {
+        try{
+            await commitJobs(false)
+        }catch(err){
+            console.log(err);
+        }
+    }, null, true, 'America/New_York');
+
+job.start()
