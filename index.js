@@ -17,30 +17,24 @@ dotenv.config()
 
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
 
-const getResultsParallel = async ({results, testing, queries}) => {
-    let maxParallel = 0;
-    await Promise.all(queries.map(async query => {
-        const promisesRun = await Promise.allSettled([
-            github(testing, query),
-            adzuna(testing, query),
-            glassdoor(testing, query),
-            indeed(testing, query),
-            linkedin(testing, query),
-            workintech_api(testing, query),
-            neuvoo(testing, query),
-            workpolis(testing, query),
-            monster(testing, query),
-            ]);
-        const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
-        promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(`ERROR: ${res.reason.config.url}`))
-        promises.forEach(promise => {
-            promise.forEach(el=>el.query = query)
-            pushArrayToObject(promise, results)
-            maxParallel+=promise.length;
-        });
-        return promises;
-    }))
-    console.log({maxParallel})
+const getResults = async ({results, testing, queries}) => {
+    let max = 0;
+    for (const query of queries) {
+        const queryResult = [...await github(testing, query),
+                ...await adzuna(testing, query),
+            ...await glassdoor(testing, query),
+            ...await indeed(testing, query),
+            ...await linkedin(testing, query),
+            ...await workintech_api(testing, query),
+            ...await neuvoo(testing, query),
+            ...await workpolis(testing, query),
+            ...await monster(testing, query),
+    ]
+        queryResult.forEach(el=>el.query = query)
+        pushArrayToObject(queryResult, results)
+            max+=queryResult.length;
+        };
+    console.log({max})
 }
 
 const deleteOldJobs = async (jobsCollectionRef, results) => {
@@ -117,14 +111,54 @@ const commitJobs = async (testing) => {
         testing: testing,
         queries: [
             'Software Engineer',
+            'Junior Software Engineer',
+            'Senior Software Engineer',
             'Software Developer',
+            'Junior Software Developer',
+            'Web Developer',
+            'Junior Web Developer',
+            'Senior Web Developer',
+            'Web Software Developer',
+            'Junior Web Software Developer',
+            'Senior Web Software Developer',
+            'Junior Web Software engineer',
+            'Senior Web Software engineer',
             'Full stack Developer',
+            'junior Full stack Developer',
+            'senior Full stack Developer',
+            'fullstack Developer',
+            'junior fullstack Developer',
+            'senior fullstack Developer',
+            'javascript Developer',
+            'Front end Developer',
+            'junior Front end Developer',
+            'senior Front end Developer',
+            'Back end Developer',
+            'junior Back end Developer',
+            'senior Back end Developer',
+            'Frontend Developer',
+            'junior Frontend Developer',
+            'senior Frontend Developer',
+            'Backend Developer',
+            'junior Backend Developer',
+            'senior Backend Developer',
             'java developer',
-            'Junior Developer',
+            'junior java developer',
+            'senior java developer',
+            'java engineer',
+            'junior java engineer',
+            'senior java engineer',
+            'java software engineer',
+            'junior java software engineer',
+            'senior java software engineer',
+            'java software developer',
+            'junior java software developer',
+            'senior java software developer',
+            'senior Software Developer',
         ]
     };
     console.time()
-    await getResultsParallel(args)
+    await getResults(args)
     console.timeEnd()
 
     const uniqueJobs = Object.values(results);
