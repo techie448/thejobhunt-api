@@ -12,12 +12,10 @@ CRON, Heroku for Node worker automation and deployment.
 
 ## Development server
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+Comment `cron`
+Comment `firebase update and delete, algolia store`
+Run `comitJobs(true)` for a dev server.
 
 ## Deploy
 
-Run `firebase deploy`
+Run `cron with comitJobs(false)`
