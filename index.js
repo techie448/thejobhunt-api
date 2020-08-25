@@ -7,7 +7,6 @@ import indeed from "./indeed.js";
 import linkedin from "./linkedin.js";
 import {getDate} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
-import Cron from 'cron';
 import neuvoo from "./neuvoo.js";
 import workpolis from "./workpolis.js";
 import monster from "./monster.js";
