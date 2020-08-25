@@ -159,12 +159,8 @@ const commitJobs = async (testing) => {
 
 }
 
-const job = new Cron.CronJob(process.env.CRON, async () => {
-        try{
-            await commitJobs(false)
-        }catch(err){
-            console.log(err);
-        }
-    }, null, true, 'America/New_York');
-
-job.start()
+try{
+    await commitJobs(false)
+}catch(err){
+    console.log(err);
+}
