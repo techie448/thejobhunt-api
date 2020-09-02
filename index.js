@@ -119,11 +119,12 @@ const commitJobs = async (testing) => {
         results: results,
         testing: testing,
         queries: [
-            'Software Engineer',
-            'Software Developer',
-            'Full stack Developer',
-            'java developer',
-            'Junior Developer',
+            'Full stack engineer',
+            'Front end developer',
+            'Frontend developer',
+            'Backend Developer',
+            'Back end Developer',
+            'javascript Developer',
         ]
     };
     console.time()
