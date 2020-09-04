@@ -1,6 +1,6 @@
 import axios from 'axios';
 import cheerio from 'cheerio';
-export default async (test, query) => {
+export default async (test, query, dateObj) => {
 
     const getData = async (url, date) => {
         const results = [];
@@ -36,7 +36,6 @@ export default async (test, query) => {
     const resultSet = [];
     while(run && date<10){
         const url = `https://neuvoo.ca/jobs/?k=${search}&p=${page}&date=${date+1}d`;
-        let dateObj = new Date();
         dateObj.setDate(dateObj.getDate() - date)
         const result = await getData(url, dateObj);
         if(result.length>0) resultSet.push(...result)

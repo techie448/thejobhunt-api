@@ -1,26 +1,25 @@
-export const getDate = (dateString) => {
-    const date = new Date();
+export const getDate = (dateString, fallbackDate) => {
     if(dateString instanceof Date){
         return dateString;
     }
     else if(dateString.match(/[0-9]+[ ]?[w]/g)){
-        date.setDate(date.getDate() - 7)
+        fallbackDate.setDate(fallbackDate.getDate() - 7)
     }else if(dateString.match(/[0-9]+[ ]?[d]/g)){
         const num = parseInt(dateString.match(/[0-9]+/g)[0]);
-        date.setDate(date.getDate() - num)
+        fallbackDate.setDate(fallbackDate.getDate() - num)
     }else if(dateString.match(/[0-9]+[ ]?[m]/g) || dateString ==='30+ days ago'){
-        date.setDate(date.getDate() - 31)
+        fallbackDate.setDate(fallbackDate.getDate() - 31)
     }
     else if (dateString.match(/[0-9]+[ ]?[h]/g) || dateString === 'Just posted' || dateString === 'Today' || dateString === 'Just now'){
     }
     else if (dateString === 'Yesterday') {
-        date.setDate(date.getDate() - 1)
+        fallbackDate.setDate(fallbackDate.getDate() - 1)
     }
     else {
-        date.setDate(date.getDate() - 300)
+        fallbackDate.setDate(fallbackDate.getDate() - 300)
         console.log(dateString)
     }
-    return date;
+    return fallbackDate;
 }
 
 export const permute = (permutation) => {

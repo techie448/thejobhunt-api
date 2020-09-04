@@ -16,7 +16,7 @@ dotenv.config()
 
 const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
 
-const getResultsParallel = async ({results, testing, queries}) => {
+const getResultsParallel = async ({results, testing, queries, dateInstance}) => {
     let maxParallel = 0;
     await Promise.all(queries.map(async query => {
         const promisesRun = await Promise.allSettled([
@@ -26,7 +26,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
             indeed(testing, query),
             linkedin(testing, query),
             workintech_api(testing, query),
-            neuvoo(testing, query),
+            neuvoo(testing, query, dateInstance),
             workpolis(testing, query),
             monster(testing, query),
             ]);
@@ -113,6 +113,7 @@ const removeEmptyFields = async (input) => {
 }
 
 const commitJobs = async (testing) => {
+    const dateInstance = new Date();
     const jobsCollectionRef = firebaseDB.collection("jobs");
     let results = {};
     const args = {
@@ -125,24 +126,24 @@ const commitJobs = async (testing) => {
             'Backend Developer',
             'Back end Developer',
             'javascript Developer',
-        ]
+        ],
+        dateInstance: dateInstance
     };
     console.time()
     await getResultsParallel(args)
     console.timeEnd()
 
     const uniqueJobs = Object.values(results);
-    console.log(uniqueJobs.length)
+    console.log(uniqueJobs.length);
 
-    uniqueJobs.forEach(job=>job.created = getDate(job.created))
+    uniqueJobs.forEach(job=>job.created = getDate(job.created, dateInstance))
 
-    const dateLimit = new Date();
     const limit = 14;
-    dateLimit.setDate(dateLimit.getDate() - limit);
+    dateInstance.setDate(dateInstance.getDate() - limit);
 
     console.log(`removing jobs older than ${limit} days...`)
     let finalJobs = uniqueJobs
-        .filter(job => job.created >= dateLimit)
+        .filter(job => job.created >= dateInstance)
         .sort((b,a) => a.created - b.created);
     console.log(finalJobs.length)
     console.log(`removing duplicates`)
@@ -154,8 +155,8 @@ const commitJobs = async (testing) => {
     console.log(`slicing jobs if older than 9998`)
     if(finalJobs.length>9998) finalJobs = finalJobs.slice(0,9998);
 
-    await deleteOldJobs(jobsCollectionRef, finalJobs)
-    await updateNewJobs(jobsCollectionRef, finalJobs)
+    // await deleteOldJobs(jobsCollectionRef, finalJobs)
+    // await updateNewJobs(jobsCollectionRef, finalJobs)
     await algolia(finalJobs)
 
     return finalJobs.length;
@@ -164,7 +165,7 @@ const commitJobs = async (testing) => {
 }
 
 try{
-    await commitJobs(false)
+    commitJobs(false)
 }catch(err){
     console.log(err);
 }
