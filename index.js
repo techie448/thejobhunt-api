@@ -32,7 +32,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
             ]);
         const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
         try{
-            promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(`ERROR: ${res.reason.config.url}`))
+            promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(`ERROR: ${res?.reason?.config?.url}`))
         }catch(err){
             console.log(err);
         }
@@ -119,12 +119,8 @@ const commitJobs = async (testing) => {
         results: results,
         testing: testing,
         queries: [
-            'Full stack engineer',
-            'Front end developer',
-            'Frontend developer',
-            'Backend Developer',
-            'Back end Developer',
-            'javascript Developer',
+            'junior business analyst',
+            'business analyst'
         ]
     };
     console.time()
@@ -154,8 +150,8 @@ const commitJobs = async (testing) => {
     console.log(`slicing jobs if older than 9998`)
     if(finalJobs.length>9998) finalJobs = finalJobs.slice(0,9998);
 
-    await deleteOldJobs(jobsCollectionRef, finalJobs)
-    await updateNewJobs(jobsCollectionRef, finalJobs)
+    // await deleteOldJobs(jobsCollectionRef, finalJobs)
+    // await updateNewJobs(jobsCollectionRef, finalJobs)
     await algolia(finalJobs)
 
     return finalJobs.length;
@@ -164,7 +160,7 @@ const commitJobs = async (testing) => {
 }
 
 try{
-    await commitJobs(false)
+    commitJobs(false)
 }catch(err){
     console.log(err);
 }

@@ -1,3 +1,4 @@
+import fetch from 'node-fetch';
 export default async (test, query) => {
 
     const jobs = [];
