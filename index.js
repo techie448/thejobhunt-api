@@ -34,7 +34,6 @@ const getResultsParallel = async ({results, testing, queries}) => {
         const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
         promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(`ERROR: ${res.reason.config.url}`))
         promises.forEach(promise => {
-            promise.forEach(el=>el.query = query)
             pushArrayToObject(promise, results)
             maxParallel+=promise.length;
         });
