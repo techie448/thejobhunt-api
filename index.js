@@ -21,7 +21,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
     let maxParallel = 0;
     await Promise.all(queries.map(async query => {
         const promisesRun = await Promise.allSettled([
-            github(testing, query),
+            // github(testing, query),
             adzuna(testing, query),
             glassdoor(testing, query),
             indeed(testing, query),
@@ -149,8 +149,8 @@ const commitJobs = async (testing) => {
     console.log(`slicing jobs if older than 9998`)
     if(finalJobs.length>9998) finalJobs = finalJobs.slice(0,9998);
 
-    await deleteOldJobs(jobsCollectionRef, finalJobs)
-    await updateNewJobs(jobsCollectionRef, finalJobs)
+    // await deleteOldJobs(jobsCollectionRef, finalJobs)
+    // await updateNewJobs(jobsCollectionRef, finalJobs)
     await algolia(finalJobs)
 
     return finalJobs.length;
