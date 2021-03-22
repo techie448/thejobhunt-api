@@ -21,15 +21,15 @@ const getResultsParallel = async ({results, testing, queries}) => {
     let maxParallel = 0;
     await Promise.all(queries.map(async query => {
         const promisesRun = await Promise.allSettled([
-            github(testing, query),
-            adzuna(testing, query),
+//             github(testing, query),
+//             adzuna(testing, query),
             glassdoor(testing, query),
             indeed(testing, query),
-            linkedin(testing, query),
-            workintech_api(testing, query),
-            neuvoo(testing, query),
-            workpolis(testing, query),
-            monster(testing, query),
+//             linkedin(testing, query),
+//             workintech_api(testing, query),
+//             neuvoo(testing, query),
+//             workpolis(testing, query),
+//             monster(testing, query),
             ]);
         const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
         promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(`ERROR: ${res.reason.config.url}`))
@@ -116,11 +116,12 @@ const commitJobs = async (testing) => {
         results: results,
         testing: testing,
         queries: [
-            'Software Engineer',
-            'Software Developer',
-            'Full stack Developer',
-            'java developer',
-            'Junior Developer',
+//             'Software Engineer',
+//             'Software Developer',
+//             'Full stack Developer',
+//             'java developer',
+//             'Junior Developer',
+            'Web Developer'
         ]
     };
     console.time()
