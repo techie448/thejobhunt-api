@@ -27,7 +27,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
             indeed(testing, query),
             linkedin(testing, query),
 //             workintech_api(testing, query),
-//             neuvoo(testing, query),
+            neuvoo(testing, query),
 //             workpolis(testing, query),
 //             monster(testing, query),
             ]);
@@ -116,12 +116,12 @@ const commitJobs = async (testing) => {
         results: results,
         testing: testing,
         queries: [
-//             'Software Engineer',
-//             'Software Developer',
-//             'Full stack Developer',
+            'Software Engineer',
+            'Software Developer',
+            'Full stack Developer',
 //             'java developer',
 //             'Junior Developer',
-            'Web Developer'
+//             'Web Developer'
         ]
     };
     console.time()
