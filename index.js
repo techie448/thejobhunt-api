@@ -25,7 +25,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
 //             adzuna(testing, query),
             glassdoor(testing, query),
             indeed(testing, query),
-//             linkedin(testing, query),
+            linkedin(testing, query),
 //             workintech_api(testing, query),
 //             neuvoo(testing, query),
 //             workpolis(testing, query),
