@@ -37,13 +37,15 @@ export default async (test, query) => {
         if(page===0) url = `https://ca.indeed.com/jobs?q=${search}&l=Canada&sort=date`;
         else url = `https://ca.indeed.com/jobs?q=${search}&l=Canada&sort=date&start=${page}`;
         const result = await getData(url);
-        if(result[result.length-1].created.match(/^(15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)( days ago)$/)) {
+        if(result[result.length-1].created.match(/^(6|7|8|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)( days ago)$/)) {
             run = false;
         }
         if(result.length>0) results.push(...result)
         else run = false;
         if(test) run=false;
+        if(results.length >= 500) run=false;
         page+=10;
+        console.log(results.length)
     }
     console.log({
         query,

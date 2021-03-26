@@ -23,7 +23,7 @@ const getResultsParallel = async ({results, testing, queries}) => {
         const promisesRun = await Promise.allSettled([
 //             github(testing, query),
 //             adzuna(testing, query),
-            glassdoor(testing, query),
+//             glassdoor(testing, query),
             indeed(testing, query),
             linkedin(testing, query),
 //             workintech_api(testing, query),
@@ -119,9 +119,12 @@ const commitJobs = async (testing) => {
             'Software Engineer',
             'Software Developer',
             'Full stack Developer',
-//             'java developer',
-//             'Junior Developer',
-//             'Web Developer'
+            'java developer',
+            'Junior Developer',
+            'Web Developer',
+            'frontend developer',
+            'backend developer',
+            'javascript developer'
         ]
     };
     console.time()
@@ -160,12 +163,11 @@ const commitJobs = async (testing) => {
 
 }
 
-const job = new Cron.CronJob(process.env.CRON, async () => {
+const job = new Cron.CronJob("55 7 * * *", async () => {
         try{
             await commitJobs(false)
         }catch(err){
             console.log(err);
         }
     }, null, true, 'America/New_York');
-
 job.start()

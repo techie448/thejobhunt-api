@@ -31,7 +31,7 @@ export default async (test, query) => {
     let page = 2;
     let run = true;
     const results = [];
-    while(run && page<=30){
+    while(run && page<=5){
         const url = `https://www.glassdoor.ca/Job/${search}-jobs-SRCH_KO0,${search.length}_IP${page}.htm?fromAge=14`;
         const result = await getData(url);
         if(result.length>0) results.push(...result)

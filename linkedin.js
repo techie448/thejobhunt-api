@@ -33,13 +33,16 @@ export default async (test, query) => {
     let page = 0;
     let run = true;
     const jobs = [];
-    while(run && page<1000){
+    while(run && page<500){
         const url = `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=${search}&location=Canada&sortBy=DD&start=${page}`;
         const results = await getData(url);
         if(results.length>0) jobs.push(...results)
         else run = false;
         if(test) run=false;
         page+=25;
+        if(jobs.length >= 500) run=false;
+        console.log(jobs.length)
+
     }
     console.log({
         query,

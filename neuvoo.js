@@ -34,7 +34,7 @@ export default async (test, query) => {
     let date = 0;
     let run = true;
     const resultSet = [];
-    while(run && date<10){
+    while(run && date<5){
         const url = `https://neuvoo.ca/jobs/?k=${search}&p=${page}&date=${date+1}d`;
         let dateObj = new Date();
         dateObj.setDate(dateObj.getDate() - date)
@@ -46,6 +46,8 @@ export default async (test, query) => {
         }
         if (test) run = false;
         else page++;
+        if(resultSet.length>=500) run=false;
+        console.log(resultSet.length)
 
     }
     console.log({
