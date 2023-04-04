@@ -30,7 +30,7 @@ let total = [];
             linkedin(testing, query),
             // workintech_api(testing, query),
             neuvoo(testing, query),
-            workpolis(testing, query),
+            // workpolis(testing, query),
             // monster(testing, query),
             ]);
         const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
@@ -145,9 +145,14 @@ const commitJobs = async (testing) => {
     await getResultsParallel(args)
     console.timeEnd()
     console.log(`unique jobs`, Object.keys(results).length)
-    const uniqueJobs = Object.values(results);
+    let uniqueJobs = Object.values(results);
+    uniqueJobs = uniqueJobs.filter(job => job.title && job.company && job.location);
+    console.log(`removed empty objects`, uniqueJobs.length);
+
     console.log(uniqueJobs.length)
-    uniqueJobs.forEach(job=>job.created = getDate(job.created))
+    uniqueJobs.forEach(job=>{
+        job.created = getDate(job.created)
+    })
 
     const dateLimit = new Date();
     const limit = 14;
@@ -158,9 +163,9 @@ const commitJobs = async (testing) => {
         .filter(job => job.created >= dateLimit)
         .sort((b,a) => a.created - b.created);
     console.log(finalJobs.length)
-    console.log('remove dups by apply')
-    finalJobs = finalJobs.filter((v,i,a)=>a.findIndex(v2=>(v2.apply===v.apply))===i)
-    console.log(finalJobs.length)
+    // console.log('remove dups by apply')
+    // finalJobs = finalJobs.filter((v,i,a)=>a.findIndex(v2=>(v2.apply===v.apply))===i)
+    // console.log(finalJobs.length)
     console.log(`removing duplicates`)
     finalJobs = await removeDuplicates(finalJobs);
     console.log(finalJobs.length)
@@ -180,7 +185,7 @@ const commitJobs = async (testing) => {
 
 }
 
-const job = new Cron.CronJob("34 17 * * *", async () => {
+const job = new Cron.CronJob("34 21 * * *", async () => {
         try{
             await commitJobs(false)
         }catch(err){

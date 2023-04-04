@@ -1,12 +1,16 @@
 import axios from 'axios';
 import cheerio from 'cheerio';
-
 export default async (test, query) => {
     const getData = async (url) => {
         const results = [];
         try{
             let data;
-            const response = await axios.get(url);
+            const response = await axios.get(url,{
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': '1',
+            });
             data = response.data;
             const $ = cheerio.load(data);
             const cards = $('.base-card');
@@ -15,7 +19,7 @@ export default async (test, query) => {
                 const title = $card.find('h3').text().trim();
                 const company = $card.find('h4').text().trim();
                 const location = $card.find('.job-search-card__location').text().trim();
-                const created = $card.find('time').text();
+                const created = $card.find('time').text().trim();
                 const apply = `${$card.find('a').attr('href')}`;
                 const id = $card.attr('data-id') + 'linkedin' + _;
                 const source = "LinkedIn";
@@ -24,6 +28,7 @@ export default async (test, query) => {
             })
 
         }catch(err){
+            if (err.response.status === 429) results.push({})
             console.log(`ERROR : ${err.config.url}`)
         }
 
