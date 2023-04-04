@@ -8,11 +8,11 @@ export default async (test, query) => {
             const response = await axios.get(url);
             const data = response.data;
             const $ = cheerio.load(data);
-            const cards = $('div.card.card__job');
+            const cards = $('.card__job');
             const organicCards = cards.filter((_,el)=>!$(el).find('div.j-sponsored').length)
             organicCards.each((_,card)=>{
                 const $card = $(card);
-                const id = $card.attr('dataid');
+                const id = $card.attr('dataid') + 'neuvoo' + _;
                 const title = $card.find('.card__job-title').text();
                 const apply = `https://neuvoo.ca${$card.find('a.card__job-link.gojob').attr('href')}`;
                 const location = $card.find('.card__job-location').text();
@@ -47,7 +47,6 @@ export default async (test, query) => {
         if (test) run = false;
         else page++;
         if(resultSet.length>=500) run=false;
-        console.log(resultSet.length)
 
     }
     console.log({

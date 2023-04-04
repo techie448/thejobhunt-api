@@ -6,10 +6,18 @@ export default async (test, query) => {
     const getData = async (url) => {
         const results = [];
         try{
-            const response = await axios.get(url);
+            const response = await axios.get(url,{
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': '1',
+                    'Origin': 'https://www.glassdoor.ca',
+            }});
             const data = response.data;
             const $ = cheerio.load(data);
             const cards = $('.jl');
+            console.log({cards})
             cards.each((_,card)=>{
                 const $card = $(card);
                 results.push({
@@ -24,6 +32,7 @@ export default async (test, query) => {
                 });
             })
         }catch(err){
+            console.log({err})
             console.log(`ERROR : ${err.config.url}`)
         }
         return results;

@@ -14,8 +14,8 @@ export default async (test, query) => {
                     .normalize("NFD")
                     .replace(/[\u0300-\u036f]/g, "")
             ).results;
-            result = result.map(job => ({
-                id: job.id || '',
+            result = result.map((job,i) => ({
+                id: 'adzuna'+ i + job.id || '',
                 company: job.company.display_name || '',
                 created: new Date(job.created) || '',
                 apply: job.redirect_url || '',

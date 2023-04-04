@@ -6,7 +6,14 @@ export default async (test, query) => {
         const results = [];
         try{
             let data;
-            const response = await axios.get(url);
+            const response = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': '1',
+                    'Origin': 'https://ca.indeed.com',
+            }});
             data = response.data;
             const $ = cheerio.load(data);
             const cards = $('div.row.result');

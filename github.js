@@ -1,3 +1,4 @@
+import axios from 'axios';
 export default async (test, query) => {
     const search = query.split(" ").join("+");
 
@@ -6,8 +7,10 @@ export default async (test, query) => {
     let resultSet = [], count = 0, result = [1];
     while(result.length>0){
         try {
-            const res = await fetch(`${url}${count}`);
+            console.log({url,result})
+            const res = await axios(`${url}${count}`);
             result = await res.json();
+            console.log({url,result})
             result = result.map(job => ({
                 id: job.id || '',
                 company: job.company || '',
@@ -19,6 +22,7 @@ export default async (test, query) => {
                 query,
             }))
         } catch(err) {
+            // console.log({err})
             console.log(`ERROR : ${url}${count}`)
             result = [];
         }

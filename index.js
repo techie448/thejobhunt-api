@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import firebaseDB from "./firebaseDB.js";
+// import firebaseDB from "./firebaseDB.js";
 import github from "./github.js";
 import adzuna from "./adzuna.js";
 import glassdoor from "./glassdoor.js";
@@ -15,32 +15,39 @@ import algolia  from "./algolia.js";
 
 dotenv.config()
 
-const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
+const pushArrayToObject = (arr, obj) => arr.forEach((el,i) => obj[el.id+i+el.source] = el);
 
 const getResultsParallel = async ({results, testing, queries}) => {
+let total = [];
+
     let maxParallel = 0;
     await Promise.all(queries.map(async query => {
         const promisesRun = await Promise.allSettled([
-//             github(testing, query),
-//             adzuna(testing, query),
-//             glassdoor(testing, query),
-            indeed(testing, query),
+            // github(testing, query),
+            adzuna(testing, query),
+            // glassdoor(testing, query),
+            // indeed(testing, query),
             linkedin(testing, query),
-//             workintech_api(testing, query),
+            // workintech_api(testing, query),
             neuvoo(testing, query),
-//             workpolis(testing, query),
-//             monster(testing, query),
+            workpolis(testing, query),
+            // monster(testing, query),
             ]);
         const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
 //         promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(`ERROR: ${res.reason.config.url}`))
-        promises.forEach(promise => {
+        
+promises.forEach(promise => {
             promise.forEach(el=>el.query = query)
             pushArrayToObject(promise, results)
+            total.push(...promise);
             maxParallel+=promise.length;
         });
         return promises;
     }))
-    console.log({maxParallel})
+
+const temparr = {};
+// pushArrayToObject(total, results);
+    console.log({maxParallel, total:total.length, temparr: Object.keys(temparr).length})
 }
 
 const deleteOldJobs = async (jobsCollectionRef, results) => {
@@ -62,7 +69,6 @@ const deleteOldJobs = async (jobsCollectionRef, results) => {
         }
     }
 }
-
 const updateNewJobs = async (jobsCollectionRef, results) => {
 console.log('updating new jobs to firebase')
     let batch = firebaseDB.batch()
@@ -75,11 +81,10 @@ console.log('updating new jobs to firebase')
         if(count===499 || result === results[results.length - 1]){
             count = 0;
             await batch.commit();
-            batch = firebaseDB.batch()
+            batch = firebaseDB.batch() 
         }
     }
 }
-
 const removeDuplicates = async (input) => {
     input = input.reduce((unique, o) => {
         if(!unique.some(obj => {
@@ -92,6 +97,15 @@ const removeDuplicates = async (input) => {
                 o.location.toLowerCase().trim().includes(obj.location.trim().toLowerCase())
 
             );
+            const res = tit && com && loc;
+            // if(res) console.log({obj, o,
+            // objt: obj.title,
+            // ot:o.title,
+            // objc:obj.company,
+            // oc:o.company,
+            // objl:obj.location,
+            // ol:o.location
+            // })
             return tit && com && loc
         })) unique.push(o);
         return unique;
@@ -110,30 +124,29 @@ const removeEmptyFields = async (input) => {
 }
 
 const commitJobs = async (testing) => {
-    const jobsCollectionRef = firebaseDB.collection("jobs");
+    // const jobsCollectionRef = firebaseDB.collection("jobs");
     let results = {};
     const args = {
         results: results,
         testing: testing,
         queries: [
-            'Software Engineer',
-            'Software Developer',
-            'Full stack Developer',
-            'java developer',
-            'Junior Developer',
+            'frontend Engineer',
+            'frontend Developer',
+            'front end Engineer',
+            'front end Developer',
+            'front-end Engineer',
+            'front-end Developer',
             'Web Developer',
-            'frontend developer',
-            'backend developer',
-            'javascript developer'
+            'javascript developer',
+            'react developer'
         ]
     };
     console.time()
     await getResultsParallel(args)
     console.timeEnd()
-
+    console.log(`unique jobs`, Object.keys(results).length)
     const uniqueJobs = Object.values(results);
     console.log(uniqueJobs.length)
-
     uniqueJobs.forEach(job=>job.created = getDate(job.created))
 
     const dateLimit = new Date();
@@ -145,17 +158,21 @@ const commitJobs = async (testing) => {
         .filter(job => job.created >= dateLimit)
         .sort((b,a) => a.created - b.created);
     console.log(finalJobs.length)
-    console.log(`removing duplicates`)
-     finalJobs = await removeDuplicates(finalJobs);
+    console.log('remove dups by apply')
+    finalJobs = finalJobs.filter((v,i,a)=>a.findIndex(v2=>(v2.apply===v.apply))===i)
     console.log(finalJobs.length)
+    console.log(`removing duplicates`)
+    finalJobs = await removeDuplicates(finalJobs);
+    console.log(finalJobs.length)
+
     console.log(`removing empty fields`)
     finalJobs = await removeEmptyFields(finalJobs);
     console.log(finalJobs.length)
     console.log(`slicing jobs if older than 9998`)
     if(finalJobs.length>9998) finalJobs = finalJobs.slice(0,9998);
 
-    await deleteOldJobs(jobsCollectionRef, finalJobs)
-    await updateNewJobs(jobsCollectionRef, finalJobs)
+    // await deleteOldJobs(jobsCollectionRef, finalJobs)
+    // await updateNewJobs(jobsCollectionRef, finalJobs)
     await algolia(finalJobs)
 
     return finalJobs.length;
@@ -163,11 +180,11 @@ const commitJobs = async (testing) => {
 
 }
 
-const job = new Cron.CronJob("55 7 * * *", async () => {
+const job = new Cron.CronJob("34 17 * * *", async () => {
         try{
             await commitJobs(false)
         }catch(err){
             console.log(err);
         }
-    }, null, true, 'America/New_York');
+    }, null, true, 'America/Vancouver');
 job.start()

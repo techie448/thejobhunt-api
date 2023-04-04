@@ -9,15 +9,15 @@ export default async (test, query) => {
             const response = await axios.get(url);
             data = response.data;
             const $ = cheerio.load(data);
-            const cards = $('.result-card');
+            const cards = $('.base-card');
             cards.each((_,card)=>{
                 const $card = $(card);
                 const title = $card.find('h3').text().trim();
                 const company = $card.find('h4').text().trim();
-                const location = $card.find('.job-result-card__location').text();
+                const location = $card.find('.job-search-card__location').text().trim();
                 const created = $card.find('time').text();
                 const apply = `${$card.find('a').attr('href')}`;
-                const id = $card.attr('data-id');
+                const id = $card.attr('data-id') + 'linkedin' + _;
                 const source = "LinkedIn";
                 const data = {id, title, apply, location, company, created, source, query, };
                 results.push( data );
@@ -41,7 +41,6 @@ export default async (test, query) => {
         if(test) run=false;
         page+=25;
         if(jobs.length >= 500) run=false;
-        console.log(jobs.length)
 
     }
     console.log({
