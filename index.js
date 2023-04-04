@@ -175,6 +175,7 @@ const commitJobs = async (testing) => {
     console.log(finalJobs.length)
     console.log(`slicing jobs if older than 9998`)
     if(finalJobs.length>9998) finalJobs = finalJobs.slice(0,9998);
+    finalJobs.forEach((job,i)=> job.id = i);
 
     // await deleteOldJobs(jobsCollectionRef, finalJobs)
     // await updateNewJobs(jobsCollectionRef, finalJobs)
@@ -185,7 +186,7 @@ const commitJobs = async (testing) => {
 
 }
 
-const job = new Cron.CronJob("34 21 * * *", async () => {
+const job = new Cron.CronJob("50 22 * * *", async () => {
         try{
             await commitJobs(false)
         }catch(err){
