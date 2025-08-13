@@ -6,10 +6,13 @@ export default async (test, query) => {
         try{
             let data;
             const response = await axios.get(url,{
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-Token': '1',
+                timeout: 15000,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': '1',
+                }
             });
             data = response.data;
             const $ = cheerio.load(data);
@@ -28,8 +31,8 @@ export default async (test, query) => {
             })
 
         }catch(err){
-            if (err.response.status === 429) results.push({})
-            console.log(`ERROR : ${err.config.url}`)
+            if (err && err.response && err.response.status === 429) results.push({})
+            console.log(`ERROR : ${err.config && err.config.url ? err.config.url : 'unknown linkedin url'}`)
         }
 
         return results;

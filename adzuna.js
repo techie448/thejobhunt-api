@@ -7,7 +7,7 @@ export default async (test, query) => {
     while(result.length>0){
         const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${count}?app_id=962980b9&app_key=0a90e95c3f2f318bf11ca7733fbb6dbd&what=${search}&max_days_old=14&sort_by=date&content-type=application/json&results_per_page=50`;
         try {
-                const response = await axios.get(url);
+                const response = await axios.get(url, { timeout: 15000 });
             result = JSON.parse(
                 JSON.stringify(response.data)
                     .replace(/__/g, '')

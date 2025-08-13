@@ -5,7 +5,7 @@ export default async (test, query) => {
     const getData = async (url, date) => {
         const results = [];
         try{
-            const response = await axios.get(url);
+            const response = await axios.get(url, { timeout: 15000 });
             const data = response.data;
             const $ = cheerio.load(data);
             const cards = $('.card__job');
@@ -23,7 +23,7 @@ export default async (test, query) => {
             })
 
         }catch(err){
-            console.log(`ERROR : ${err.config.url}`);
+            console.log(`ERROR : ${err.config && err.config.url ? err.config.url : 'unknown neuvoo url'}`);
         }
 
         return results;

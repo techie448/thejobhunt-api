@@ -4,7 +4,7 @@ export default async (test, query) => {
     const getData = async (url) => {
         let results = [];
         try{
-            const response = await axios.get(url);
+            const response = await axios.get(url, { timeout: 15000 });
             const data = response.data;
             const organicData = data.filter(res => !res.hasOwnProperty('InlineApasAd'))
             results =  organicData.map(job => ({
@@ -19,7 +19,7 @@ export default async (test, query) => {
             }));
 
         }catch(err){
-            console.log(`ERROR : ${err.config.url}`);
+            console.log(`ERROR : ${err.config && err.config.url ? err.config.url : 'unknown monster url'}`);
         }
 
         return results;

@@ -15,8 +15,10 @@ export default async (test, query) => {
         "attributesToRetrieve":["created_at","title","organization.name","locations","url"],
     };
     try {
-
-        const res = await fetch(url, {method: 'POST', headers: headers, body: JSON.stringify(data)})
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const res = await fetch(url, {method: 'POST', headers: headers, body: JSON.stringify(data), signal: controller.signal})
+        clearTimeout(timeoutId);
         const json = await res.json();
         jobs.push(...json.hits.map(r => ({
             title: r.title,
@@ -34,7 +36,7 @@ export default async (test, query) => {
             results: jobs.length
         });
     }catch(err){
-        console.log(`ERROR: ALGOLIA ${err}`)
+        console.log(`ERROR: ALGOLIA ${err && err.name === 'AbortError' ? 'timeout' : err}`)
     }
     return jobs;
 

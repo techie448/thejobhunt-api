@@ -7,6 +7,7 @@ export default async (test, query) => {
         const results = [];
         try{
             const response = await axios.get(url,{
+                timeout: 15000,
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
                     'Accept-Language': 'en-US,en;q=0.9',
@@ -33,7 +34,7 @@ export default async (test, query) => {
             })
         }catch(err){
             console.log({err})
-            console.log(`ERROR : ${err.config.url}`)
+            console.log(`ERROR : ${err.config && err.config.url ? err.config.url : 'unknown glassdoor url'}`)
         }
         return results;
     }
