@@ -7,10 +7,8 @@ export default async (test, query) => {
     let resultSet = [], count = 0, result = [1];
     while(result.length>0){
         try {
-            console.log({url,result})
             const res = await axios(`${url}${count}`);
-            result = await res.json();
-            console.log({url,result})
+            result = res.data;
             result = result.map(job => ({
                 id: job.id || '',
                 company: job.company || '',

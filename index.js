@@ -12,6 +12,12 @@ import neuvoo from "./neuvoo.js";
 import workpolis from "./workpolis.js";
 import monster from "./monster.js";
 import algolia  from "./algolia.js";
+import stackOverflow from "./stack-overflow-jobs.js";
+import remoteOk from "./remote-ok.js";
+import freelancer from "./freelancer.js";
+import dice from "./dice.js";
+import jobbank from "./jobbank.js";
+import genericJobs from "./generic-jobs.js";
 
 dotenv.config()
 
@@ -23,15 +29,21 @@ let total = [];
     let maxParallel = 0;
     await Promise.all(queries.map(async query => {
         const promisesRun = await Promise.allSettled([
-            // github(testing, query),
+            // github(testing, query), // DISABLED - API deprecated
             adzuna(testing, query),
-            // glassdoor(testing, query),
-            indeed(testing, query),
+            // glassdoor(testing, query), // DISABLED - blocked by cloudflare
+            // indeed(testing, query), // DISABLED - blocked
             linkedin(testing, query),
-            workintech_api(testing, query),
-            neuvoo(testing, query),
-            workpolis(testing, query),
-            monster(testing, query),
+            // workintech_api(testing, query), // DISABLED - DNS error
+            // neuvoo(testing, query), // DISABLED - connection error
+            // workpolis(testing, query), // DISABLED - connection error
+            // monster(testing, query), // DISABLED - API issues
+            // stackOverflow(testing, query), // DISABLED - API deprecated
+            remoteOk(testing, query),
+            freelancer(testing, query),
+            // dice(testing, query), // DISABLED - not working
+            // jobbank(testing, query), // DISABLED - connection issues
+            genericJobs(testing, query),
             ]);
         const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
 //         promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(`ERROR: ${res.reason.config.url}`))
@@ -140,7 +152,26 @@ const commitJobs = async (testing) => {
             'front-end Developer',
             'Web Developer',
             'javascript developer',
-            'react developer'
+            'react developer',
+            'software engineer',
+            'full stack developer',
+            'backend developer',
+            'node.js developer',
+            'angular developer',
+            'vue.js developer',
+            'typescript developer',
+            'UI/UX developer',
+            'mobile developer',
+            'python developer',
+            'java developer',
+            'php developer',
+            'ruby developer',
+            'go developer',
+            'rust developer',
+            'swift developer',
+            'kotlin developer',
+            'devops engineer',
+            'cloud engineer'
         ]
     };
     console.time()
@@ -181,7 +212,7 @@ const commitJobs = async (testing) => {
 
     // await deleteOldJobs(jobsCollectionRef, finalJobs)
     // await updateNewJobs(jobsCollectionRef, finalJobs)
-    await algolia(finalJobs)
+    // await algolia(finalJobs)  // COMMENTED OUT FOR TESTING
 
     return finalJobs.length;
 
@@ -197,4 +228,4 @@ const job = new Cron.CronJob("50 22 * * *", async () => {
     }, null, true, 'America/Vancouver');
 
 // job.start()
-commitJobs(false)
+commitJobs(false) // DISABLE TESTING MODE TO GET 1000+ JOBS
