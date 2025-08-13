@@ -1,46 +1,63 @@
-export default async (test, query, browser) => {
-    const search = query.split(" ").join("+");
-    const scrapeJobs = async (page, url) => {
-        await page.goto(url, {waitUntil: 'networkidle2'});
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
-        return await page.evaluate(()=>
-            Array.from(document.querySelectorAll('.clickcard')).map(r=>({
-                    title: r.querySelector('.title') && r.querySelector('.title').innerText.trim(),
-                    company : r.querySelector('.company') && r.querySelector('.company').innerText.trim(),
-                    location : r.querySelector('.location') && r.querySelector('.location').innerText.trim(),
-                    created : r.querySelector('.date') && r.querySelector('.date').innerText.trim(),
-                    apply : r.querySelector('.jobtitle') && r.querySelector('.jobtitle').href.trim(),
-                    id : r.id,
-                    source : 'Indeed',
-                })
-            )
-        );
-
-
-    }
-    const url = `https://ca.indeed.com/jobs?q=${search}&l=Canada&sort=date`
-        const jobs = [];
-
-        const page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(0);
-
-        jobs.push(...await scrapeJobs(page, url));
-
-        let pagination = 10;
-        let recent = true;
-        if(test) pagination = 680
-
-        while(recent){
-            jobs.push(...await scrapeJobs(page, (`${url}&start=${pagination}`)))
-            pagination+=10;
-            if(jobs[jobs.length-1].created.includes("30")) recent = false
-            if(test) recent = false
-
+export default async (test, query) => {
+    const getData = async (url) => {
+        const results = [];
+        try{
+            let data;
+            const response = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': '1',
+                    'Origin': 'https://ca.indeed.com',
+            }});
+            data = response.data;
+            const $ = cheerio.load(data);
+            const cards = $('div.row.result');
+            cards.each((_,card)=>{
+                const $card = $(card);
+                const title = $card.find('.jobtitle').text().trim();
+                const company = $card.find('.company').text().trim();
+                const location = $card.find('.location').text();
+                const created = $card.find('.date').text();
+                const apply = `https://ca.indeed.com${$card.find('a.jobtitle').attr('href')}`;
+                const id = $card.attr('id');
+                const source = "Indeed";
+                const data = {id, title, apply, location, company, created, source, query, };
+                results.push(data);
+            })
+        }catch(err){
+            console.log(`ERROR : ${err.config.url}`);
         }
+
+        return results;
+    }
+    const search = query.split(" ").join("+");
+    let page = 0;
+    let run = true;
+    const results = [];
+    while(run){
+        let url;
+        if(page===0) url = `https://ca.indeed.com/jobs?q=${search}&l=Canada&sort=date`;
+        else url = `https://ca.indeed.com/jobs?q=${search}&l=Canada&sort=date&start=${page}`;
+        const result = await getData(url);
+        if(result[result.length-1].created.match(/^(6|7|8|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)( days ago)$/)) {
+            run = false;
+        }
+        if(result.length>0) results.push(...result)
+        else run = false;
+        if(test) run=false;
+        if(results.length >= 500) run=false;
+        page+=10;
+        console.log(results.length)
+    }
     console.log({
         query,
         source: 'indeed',
-        results: jobs.length
+        results: results.length
     });
-        return jobs;
+    return results;
 };

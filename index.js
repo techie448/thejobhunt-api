@@ -1,216 +1,200 @@
-import firebaseDB from "./firebaseDB.js";
+import dotenv from 'dotenv';
+// import firebaseDB from "./firebaseDB.js";
 import github from "./github.js";
 import adzuna from "./adzuna.js";
 import glassdoor from "./glassdoor.js";
 import indeed from "./indeed.js";
 import linkedin from "./linkedin.js";
-import algolia from "./algolia.js";
 import {getDate} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
-import puppeteer from "puppeteer";
-import algoliasearch from "algoliasearch";
+import Cron from 'cron';
+import neuvoo from "./neuvoo.js";
+import workpolis from "./workpolis.js";
+import monster from "./monster.js";
+import algolia  from "./algolia.js";
 
-const pushArrayToObject = (arr, obj) => arr.forEach(el => obj[el.id] = el);
+dotenv.config()
+
+const pushArrayToObject = (arr, obj) => arr.forEach((el,i) => obj[el.id+i+el.source] = el);
 
 const getResultsParallel = async ({results, testing, queries}) => {
-    const browser = await puppeteer.launch();
+let total = [];
+
+    let maxParallel = 0;
     await Promise.all(queries.map(async query => {
-        const promises = await Promise.all([github(testing, query),
-        adzuna(testing, query),
-        glassdoor(testing, query, browser),
-        indeed(testing, query, browser),
-        linkedin(testing, query, browser),
-        workintech_api(testing, query),
+        const promisesRun = await Promise.allSettled([
+            // github(testing, query),
+            adzuna(testing, query),
+            // glassdoor(testing, query),
+            indeed(testing, query),
+            linkedin(testing, query),
+            workintech_api(testing, query),
+            neuvoo(testing, query),
+            workpolis(testing, query),
+            monster(testing, query),
             ]);
-        const initial = Object.keys(results).length;
-        let total = 0;
-        promises.forEach(promise => {
+        const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
+//         promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(`ERROR: ${res.reason.config.url}`))
+
+promises.forEach(promise => {
             promise.forEach(el=>el.query = query)
             pushArrayToObject(promise, results)
-            total+=promise.length;
-        });
-        const final = Object.keys(results).length;
-        console.log({
-            total,
-            new : final - initial,
-            duplicates : total - (final - initial),
-            final
+            total.push(...promise);
+            maxParallel+=promise.length;
         });
         return promises;
     }))
 
-
-    await browser.close();
-}
-
-const getResults = async ({results, testing, queries}) => {
-    const browser = await puppeteer.launch();
-    for (const query of queries) {
-
-        // console.log(query);
-
-        const promises = await Promise.all([
-            github(testing, query),
-            adzuna(testing, query),
-            glassdoor(testing, query, browser),
-            indeed(testing, query, browser),
-            linkedin(testing, query, browser),
-            workintech_api(testing, query),
-        ]);
-
-
-        promises.forEach(pr=>pr.forEach(el=>el.query = query));
-        let streak = 0;
-        const initial = Object.keys(results).length;
-        let total = 0;
-        promises.forEach(promise => {
-            const initial = Object.keys(results).length;
-            pushArrayToObject(promise, results)
-            const afterUpdate = Object.keys(results).length;
-            total+=promise.length;
-            if((afterUpdate - initial) === 0 && promise.length > 0) streak++;
-            else streak = 0;
-            if(streak>5) console.log({
-                streak,
-                source: promise[0].source,
-                initial,
-                afterUpdate,
-                fetch : promise.length,
-                diff : afterUpdate - initial
-            })
-
-        })
-        const final = Object.keys(results).length;
-        // console.log({
-        //     total,
-        //     new : final - initial,
-        //     duplicates : total - (final - initial),
-        //     final
-        // });
-
-
-    }
-    await browser.close();
+const temparr = {};
+// pushArrayToObject(total, results);
+    console.log({maxParallel, total:total.length, temparr: Object.keys(temparr).length})
 }
 
 const deleteOldJobs = async (jobsCollectionRef, results) => {
     const snapshot = await jobsCollectionRef.get();
     const snapshotData = await snapshot.docs.map(doc => doc.data())
     console.log(`retrieved snapshot from firebase ${snapshotData.length}`)
-
     console.log(`deleting old jobs`)
-
     let batch = firebaseDB.batch()
-let count = 0;
+    let count = 0;
     for (const job of snapshotData) {
         if (!results.some(j => j.id === job.id)) {
             batch.delete(jobsCollectionRef.doc(job.id));
             count++;
             if(count===499 || job === snapshotData[snapshotData.length - 1]){
                 count = 0;
-                const committed = await batch.commit();
-                console.log(committed)
-                batch = firebaseDB.batch()
-
+                await batch.commit();
+                batch = firebaseDB.batch();
             }
         }
     }
 }
-
 const updateNewJobs = async (jobsCollectionRef, results) => {
-console.log('starting batch')
+console.log('updating new jobs to firebase')
     let batch = firebaseDB.batch()
     let count = 0;
     for (const result of results) {
         if(!result.id) result.id = jobsCollectionRef.doc().id;
         const docRef = jobsCollectionRef.doc(result.id);
-        console.log(results.indexOf(result))
         batch.set(docRef, result);
         count++;
         if(count===499 || result === results[results.length - 1]){
             count = 0;
-            const committed = await batch.commit();
-            console.log(committed)
+            await batch.commit();
             batch = firebaseDB.batch()
         }
     }
 }
+const removeDuplicates = async (input) => {
+    input = input.reduce((unique, o) => {
+        if(!unique.some(obj => {
+            const tit = obj.title.trim() === o.title.trim()
+            const com = obj.company.trim() === o.company.trim()
+                || obj.company.toLowerCase().trim().includes(o.company.trim().toLowerCase())
+                || o.company.toLowerCase().trim().includes(obj.company.trim().toLowerCase());
+            const loc  = (obj.location.trim() === o.location.trim() ||
+                obj.location.toLowerCase().trim().includes(o.location.trim().toLowerCase()) ||
+                o.location.toLowerCase().trim().includes(obj.location.trim().toLowerCase())
 
-const commitJobs = async () => {
+            );
+            const res = tit && com && loc;
+            // if(res) console.log({obj, o,
+            // objt: obj.title,
+            // ot:o.title,
+            // objc:obj.company,
+            // oc:o.company,
+            // objl:obj.location,
+            // ol:o.location
+            // })
+            return tit && com && loc
+        })) unique.push(o);
+        return unique;
+    },[]);
+    return input;
+}
 
-    const jobsCollectionRef = firebaseDB.collection("jobs");
-let results = {};
+const removeEmptyFields = async (input) => {
+    return input.filter(job => {
+        let res = true;
+        Object.keys(job).forEach(key => {
+            if (!job[key] || job[key].length < 2) res = false;
+        })
+        return res;
+    })
+}
+
+const commitJobs = async (testing) => {
+    // const jobsCollectionRef = firebaseDB.collection("jobs");
+    let results = {};
     const args = {
         results: results,
-        testing: false,
+        testing: testing,
         queries: [
-            'Software Engineer',
-            'Software Developer',
+            'frontend Engineer',
+            'Senior Frontend Engineer',
+            'frontend Developer',
+            'Senior Frontend Developer',
+            'front end Engineer',
+            'front end Developer',
+            'front-end Engineer',
+            'front-end Developer',
             'Web Developer',
-            'Web Software Developer',
-            'Web Software engineer',
-            'fullstack Developer',
-            'javascript Developer',
-            'Full stack Developer',
-            'Front end Developer',
-            'Back end Developer',
-            'react developer',
-            'react software developer',
-            'react engineer',
-            'react software engineer',
-            'vue developer',
-            'angular developer',
-            'php developer',
-            'wordpress developer',
-            'java developer',
-            'java software developer',
-            'python developer',
-            'django developer',
-            'Junior Software Developer',
-            'Junior fullstack Developer',
-            'Junior Software Engineer',
-            'Junior Developer',
+            'javascript developer',
+            'react developer'
         ]
     };
     console.time()
     await getResultsParallel(args)
     console.timeEnd()
-    const uniqueJobs = Object.values(results);
-
-    console.log(`add datetimestamps`)
-
-    uniqueJobs.forEach(job=>job.created = getDate(job.created))
+    console.log(`unique jobs`, Object.keys(results).length)
+    let uniqueJobs = Object.values(results);
+    uniqueJobs = uniqueJobs.filter(job => job.title && job.company && job.location);
+    console.log(`removed empty objects`, uniqueJobs.length);
 
     console.log(uniqueJobs.length)
-    await deleteOldJobs(jobsCollectionRef, uniqueJobs)
-    await updateNewJobs(jobsCollectionRef, uniqueJobs)
-    await algolia(uniqueJobs)
+    uniqueJobs.forEach(job=>{
+        job.created = getDate(job.created)
+    })
+
+    const dateLimit = new Date();
+    const limit = 14;
+    dateLimit.setDate(dateLimit.getDate() - limit);
+
+    console.log(`removing jobs older than ${limit} days...`)
+    let finalJobs = uniqueJobs
+        .filter(job => job.created >= dateLimit)
+        .sort((b,a) => a.created - b.created);
+    console.log(finalJobs.length)
+    // console.log('remove dups by apply')
+    // finalJobs = finalJobs.filter((v,i,a)=>a.findIndex(v2=>(v2.apply===v.apply))===i)
+    // console.log(finalJobs.length)
+    console.log(`removing duplicates`)
+    finalJobs = await removeDuplicates(finalJobs);
+    console.log(finalJobs.length)
+
+    console.log(`removing empty fields`)
+    finalJobs = await removeEmptyFields(finalJobs);
+    console.log(finalJobs.length)
+    console.log(`slicing jobs if older than 9998`)
+    if(finalJobs.length>9998) finalJobs = finalJobs.slice(0,9998);
+    finalJobs.forEach((job,i)=> job.id = i);
+
+    // await deleteOldJobs(jobsCollectionRef, finalJobs)
+    // await updateNewJobs(jobsCollectionRef, finalJobs)
+    await algolia(finalJobs)
+
+    return finalJobs.length;
 
 
 }
 
-const transfer_from_algolia_to_firestore = async () => {
-    let hits = [];
-
-    const client = algoliasearch('KCCE701SC2', '719a29d1dfb3929dd72afd2b3c35c3ab');
-    const index = client.initIndex('thejobhunt');
-    await index.browseObjects({
-        query: '', // Empty query will match all records
-        batch: batch => {
-            hits = hits.concat(batch);
+const job = new Cron.CronJob("50 22 * * *", async () => {
+        try{
+            await commitJobs(false)
+        }catch(err){
+            console.log(err);
         }
-    }).then(() => {
-        hits.forEach(hit=> delete hit.objectID)
-        const jobsCollectionRef = firebaseDB.collection("jobs");
-        deleteOldJobs(jobsCollectionRef, hits)
-            .then(()=>
-                updateNewJobs(jobsCollectionRef, hits)
-                    .then(()=>
-                        console.log('stored'))
-    )
-    });
+    }, null, true, 'America/Vancouver');
 
-}
-
-commitJobs().then( res => console.log(res)).catch(err => console.log(err))
-// transfer_from_algolia_to_firestore().then( res => console.log(res)).catch(err => console.log(err))
+// job.start()
+commitJobs(false)

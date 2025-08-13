@@ -1,14 +1,16 @@
+import axios from 'axios';
 export default async (test, query) => {
     const search = query.split(" ").join("+");
 
-    const req_url = `https://jobs.github.com/positions.json?description=${search}&location=canada&page=`;
+    const url = `https://jobs.github.com/positions.json?description=${search}&location=canada&page=`;
 
     let resultSet = [], count = 0, result = [1];
-if(test) count = 1;
     while(result.length>0){
         try {
-            const res = await fetch(`${req_url}${count}`);
+            console.log({url,result})
+            const res = await axios(`${url}${count}`);
             result = await res.json();
+            console.log({url,result})
             result = result.map(job => ({
                 id: job.id || '',
                 company: job.company || '',
@@ -17,14 +19,14 @@ if(test) count = 1;
                 source: 'Github',
                 location: job.location || '',
                 title: job.title || '',
+                query,
             }))
         } catch(err) {
-            console.log(err);
+            // console.log({err})
+            console.log(`ERROR : ${url}${count}`)
             result = [];
         }
         resultSet.push(...result);
-
-
         if(result.length>0) count++;
     }
 
