@@ -26,16 +26,16 @@ let total = [];
             // github(testing, query),
             adzuna(testing, query),
             // glassdoor(testing, query),
-            // indeed(testing, query),
+            indeed(testing, query),
             linkedin(testing, query),
-            // workintech_api(testing, query),
+            workintech_api(testing, query),
             neuvoo(testing, query),
-            // workpolis(testing, query),
-            // monster(testing, query),
+            workpolis(testing, query),
+            monster(testing, query),
             ]);
         const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
 //         promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(`ERROR: ${res.reason.config.url}`))
-        
+
 promises.forEach(promise => {
             promise.forEach(el=>el.query = query)
             pushArrayToObject(promise, results)
@@ -81,7 +81,7 @@ console.log('updating new jobs to firebase')
         if(count===499 || result === results[results.length - 1]){
             count = 0;
             await batch.commit();
-            batch = firebaseDB.batch() 
+            batch = firebaseDB.batch()
         }
     }
 }
@@ -131,7 +131,9 @@ const commitJobs = async (testing) => {
         testing: testing,
         queries: [
             'frontend Engineer',
+            'Senior Frontend Engineer',
             'frontend Developer',
+            'Senior Frontend Developer',
             'front end Engineer',
             'front end Developer',
             'front-end Engineer',
@@ -193,4 +195,6 @@ const job = new Cron.CronJob("50 22 * * *", async () => {
             console.log(err);
         }
     }, null, true, 'America/Vancouver');
-job.start()
+
+// job.start()
+commitJobs(false)
