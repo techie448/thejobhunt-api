@@ -19,7 +19,7 @@ export default async (test, query) => {
             }));
 
         }catch(err){
-            console.log(`ERROR : ${err.config.url}`);
+            console.log(`ERROR : ${err.config?.url || 'Monster API'}`);
         }
 
         return results;

@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 export default async (test, query) => {
 
     const jobs = [];
@@ -16,8 +18,8 @@ export default async (test, query) => {
     };
     try {
 
-        const res = await fetch(url, {method: 'POST', headers: headers, body: JSON.stringify(data)})
-        const json = await res.json();
+        const res = await axios.post(url, data, {headers})
+        const json = res.data;
         jobs.push(...json.hits.map(r => ({
             title: r.title,
             company: r.organization.name,
