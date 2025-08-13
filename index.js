@@ -7,7 +7,7 @@ import indeed from "./indeed.js";
 import linkedin from "./linkedin.js";
 import {getDate} from "./utilities.js";
 import workintech_api from "./workintech-aloglia-api.js"
-import Cron from 'cron';
+import { CronJob } from 'cron';
 import neuvoo from "./neuvoo.js";
 import workpolis from "./workpolis.js";
 import monster from "./monster.js";
@@ -17,33 +17,59 @@ dotenv.config()
 
 const pushArrayToObject = (arr, obj) => arr.forEach((el,i) => obj[el.id+i+el.source] = el);
 
+const withTimeout = async (promise, ms, label) => {
+    let timeoutId;
+    const timeoutPromise = new Promise((resolve) => {
+        timeoutId = setTimeout(() => {
+            console.log(`Timeout: ${label} exceeded ${ms}ms`);
+            resolve([]);
+        }, ms);
+    });
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutId);
+    return result;
+};
+
 const getResultsParallel = async ({results, testing, queries}) => {
 let total = [];
 
     let maxParallel = 0;
-    await Promise.all(queries.map(async query => {
-        const promisesRun = await Promise.allSettled([
-            // github(testing, query),
-            adzuna(testing, query),
-            // glassdoor(testing, query),
-            indeed(testing, query),
-            linkedin(testing, query),
-            workintech_api(testing, query),
-            neuvoo(testing, query),
-            workpolis(testing, query),
-            monster(testing, query),
-            ]);
-        const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
-//         promisesRun.filter(res=> res.status==='rejected').forEach(res=>console.log(`ERROR: ${res.reason.config.url}`))
 
-promises.forEach(promise => {
+    const runQuery = async (query) => {
+        const calls = testing
+            ? [
+                adzuna(testing, query),
+                workintech_api(testing, query),
+                monster(testing, query),
+              ]
+            : [
+                // github(testing, query),
+                adzuna(testing, query),
+                // glassdoor(testing, query),
+                indeed(testing, query),
+                linkedin(testing, query),
+                workintech_api(testing, query),
+                neuvoo(testing, query),
+                workpolis(testing, query),
+                monster(testing, query),
+              ];
+        const promisesRun = await Promise.allSettled(
+            calls.map((c, i) => withTimeout(c, testing ? 12000 : 18000, `source_${i}_${query}`))
+        );
+        const promises = promisesRun.filter(res=> res.status==='fulfilled').map(res=>res.value);
+        promises.forEach(promise => {
             promise.forEach(el=>el.query = query)
             pushArrayToObject(promise, results)
             total.push(...promise);
             maxParallel+=promise.length;
         });
-        return promises;
-    }))
+    };
+
+    const concurrency = testing ? 2 : 6;
+    for (let i = 0; i < queries.length; i += concurrency) {
+        const batch = queries.slice(i, i + concurrency);
+        await Promise.all(batch.map(q => runQuery(q)));
+    }
 
 const temparr = {};
 // pushArrayToObject(total, results);
@@ -129,7 +155,10 @@ const commitJobs = async (testing) => {
     const args = {
         results: results,
         testing: testing,
-        queries: [
+        queries: testing ? [
+            'react developer',
+            'frontend developer'
+        ] : [
             'frontend Engineer',
             'Senior Frontend Engineer',
             'frontend Developer',
@@ -181,14 +210,30 @@ const commitJobs = async (testing) => {
 
     // await deleteOldJobs(jobsCollectionRef, finalJobs)
     // await updateNewJobs(jobsCollectionRef, finalJobs)
-    await algolia(finalJobs)
+    const countsBySource = finalJobs.reduce((acc, job) => {
+        const sourceKey = job.source || 'Unknown';
+        acc[sourceKey] = (acc[sourceKey] || 0) + 1;
+        return acc;
+    }, {});
+    const sourcesMeetingMin = Object.values(countsBySource).filter(c => c >= 25).length;
+    const meetsThreshold = finalJobs.length >= 1000 && sourcesMeetingMin >= 5;
+
+    console.log({ totalJobs: finalJobs.length, countsBySource, sourcesMeetingMin, meetsThreshold });
+
+    if (testing) {
+        console.log('Testing run: skipping Algolia write.');
+    } else if (meetsThreshold) {
+        await algolia(finalJobs)
+    } else {
+        console.log('Algolia write skipped: thresholds not met.');
+    }
 
     return finalJobs.length;
 
 
 }
 
-const job = new Cron.CronJob("50 22 * * *", async () => {
+const job = new CronJob("50 22 * * *", async () => {
         try{
             await commitJobs(false)
         }catch(err){
@@ -197,4 +242,5 @@ const job = new Cron.CronJob("50 22 * * *", async () => {
     }, null, true, 'America/Vancouver');
 
 // job.start()
-commitJobs(false)
+const isTesting = process.env.TEST_RUN === '1';
+commitJobs(isTesting).then(() => process.exit(0)).catch(err => { console.error(err); process.exit(1); });

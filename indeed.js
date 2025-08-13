@@ -7,6 +7,7 @@ export default async (test, query) => {
         try{
             let data;
             const response = await axios.get(url, {
+                timeout: 15000,
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
                     'Accept-Language': 'en-US,en;q=0.9',
@@ -30,7 +31,7 @@ export default async (test, query) => {
                 results.push(data);
             })
         }catch(err){
-            console.log(`ERROR : ${err.config.url}`);
+            console.log(`ERROR : ${err.config && err.config.url ? err.config.url : 'unknown indeed url'}`);
         }
 
         return results;
@@ -44,7 +45,8 @@ export default async (test, query) => {
         if(page===0) url = `https://ca.indeed.com/jobs?q=${search}&l=Canada&sort=date`;
         else url = `https://ca.indeed.com/jobs?q=${search}&l=Canada&sort=date&start=${page}`;
         const result = await getData(url);
-        if(result[result.length-1].created.match(/^(6|7|8|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)( days ago)$/)) {
+        const last = result[result.length-1];
+        if(last && last.created && last.created.match(/^(6|7|8|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)( days ago)$/)) {
             run = false;
         }
         if(result.length>0) results.push(...result)
