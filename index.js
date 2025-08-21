@@ -181,9 +181,10 @@ const commitJobs = async (testing) => {
 
     // await deleteOldJobs(jobsCollectionRef, finalJobs)
     // await updateNewJobs(jobsCollectionRef, finalJobs)
-    await algolia(finalJobs)
+    await algolia(finalJobs);
 
-    return finalJobs.length;
+    process.exit();
+
 
 
 }
